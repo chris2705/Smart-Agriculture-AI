@@ -6,3 +6,4 @@ This repository contains the full source code for our final-year project includi
 - Streamlit Frontend
 - Firebase Backend
 - ESP32 Hardware Integration
+ 

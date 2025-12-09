@@ -1,0 +1,21 @@
+{
+  "crop": {
+    "accuracy": 0.205,
+    "classes": [
+      "Maize",
+      "Paddy",
+      "Pulses",
+      "Sugarcane",
+      "Wheat"
+    ]
+  },
+  "fertilizer": {
+    "accuracy": 0.25,
+    "classes": [
+      "Compost",
+      "NPK",
+      "Potash",
+      "Urea"
+    ]
+  }
+}

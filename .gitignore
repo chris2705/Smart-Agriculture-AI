@@ -1,7 +1,7 @@
 # ---------------------------
 # Backend – Security & Model Files
 # ---------------------------
-firebase_key.json
+backend/firebase_key.json
 backend_models/
 backend_explanations/
 

@@ -1,8 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 joblib
-scikit-learn
 numpy
-pandas
+scikit-learn
 google-cloud-storage
+firebase-admin
 python-dotenv

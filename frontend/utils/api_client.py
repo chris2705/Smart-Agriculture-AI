@@ -1,9 +1,7 @@
-﻿# frontend/utils/api_client.py
+﻿import requests
 
-import requests
-
-# Adjust BACKEND_URL if your backend runs elsewhere
 BACKEND_URL = "http://127.0.0.1:8000"
+
 
 def predict(features):
     """
@@ -11,6 +9,7 @@ def predict(features):
     """
     url = f"{BACKEND_URL}/predict"
     payload = {"features": features}
+
     try:
         response = requests.post(url, json=payload, timeout=8)
     except Exception as e:
@@ -20,3 +19,14 @@ def predict(features):
         raise Exception(f"Backend error [{response.status_code}]: {response.text}")
 
     return response.json()
+
+
+def ask_chatbot(question):
+    """
+    TEMPORARY SAFE PLACEHOLDER
+    (NO OpenAI dependency)
+    """
+    return (
+        "Pulses are recommended because they grow well in moderate nitrogen levels, "
+        "help improve soil fertility, and suit your soil pH and moisture conditions."
+    )

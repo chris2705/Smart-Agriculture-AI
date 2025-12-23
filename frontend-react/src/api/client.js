@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const BACKEND_URL = "http://127.0.0.1:8000";
+// Automatically use the same hostname as the frontend (localhost or network IP)
+const BACKEND_URL = `http://${window.location.hostname}:8000`;
 
 export const predict = async (features) => {
     try {

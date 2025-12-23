@@ -55,6 +55,35 @@ FILES = {
 class Features(BaseModel):
     features: list  # [nitrogen, phosphorus, potassium, pH, moisture, temperature, NPK_total]
 
+class ChatRequest(BaseModel):
+    message: str
+    context: Optional[dict] = None
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+    msg = request.message.lower()
+    context = request.context or {}
+    
+    # Extract context variables
+    crop = context.get("prediction", "Unknown")
+    
+    response_text = ""
+    
+    if "why" in msg and crop != "Unknown":
+        response_text = f"{crop} is recommended because your soil's NPK levels and pH are optimal for its growth. It requires specific moisture conditions that match your input."
+    elif "fertilizer" in msg:
+        fert = context.get("explanation", {}).get("fertilizer_recommendation", "organic matter")
+        response_text = f"Based on the nutrient gaps, we recommend using {fert}. This will help balance the soil fertility."
+    elif "water" in msg or "irrigation" in msg:
+        if crop.lower() == "rice":
+             response_text = "Rice is a water-intensive crop. Ensure consistent flooding or heavy irrigation."
+        else:
+             response_text = f"For {crop}, maintain moderate soil moisture. Avoid waterlogging."
+    else:
+        response_text = f"I can help you with questions about {crop} farming, fertilizer usage, or general soil health. What would you like to know?"
+        
+    return {"response": response_text}
+
 def download_blob_to(path_local: str, blob_path: str, bucket):
     blob = bucket.blob(blob_path)
     if not blob.exists():

@@ -17,3 +17,13 @@ export const predict = async (features) => {
         }
     }
 };
+
+export const chat = async (message, context) => {
+    try {
+        const response = await axios.post(`${BACKEND_URL}/chat`, { message, context });
+        return response.data;
+    } catch (error) {
+        console.error("Chat error:", error);
+        return { response: "Sorry, I'm having trouble connecting to the server right now." };
+    }
+};

@@ -4,7 +4,7 @@ import { Send, Bot, User, Sparkles } from 'lucide-react';
 import { chat } from '../api/client';
 import { cn } from '../lib/utils';
 
-export const Chatbot = ({ context }) => {
+export const Chatbot = ({ context, fullScreen = false }) => {
     const [messages, setMessages] = useState([
         { id: 1, text: "Hello! I'm your farming assistant. Once you get a recommendation, I can explain it further.", sender: 'bot' }
     ]);
@@ -42,7 +42,10 @@ export const Chatbot = ({ context }) => {
     };
 
     return (
-        <div className="flex flex-col h-[600px] bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden sticky top-8">
+        <div className={cn(
+            "flex flex-col bg-white overflow-hidden",
+            fullScreen ? "h-full md:rounded-3xl md:shadow-xl md:border md:border-zinc-100" : "h-[600px] rounded-3xl shadow-xl border border-zinc-100 sticky top-8"
+        )}>
             {/* Header */}
             <div className="bg-nature-600 p-4 flex items-center gap-3">
                 <div className="bg-white/20 p-2 rounded-full">

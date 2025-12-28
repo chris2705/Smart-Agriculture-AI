@@ -1,38 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { Leaf, FlaskConical, Zap, Droplets, Thermometer, Activity, Sprout } from 'lucide-react';
+import { Leaf, FlaskConical, Zap, Droplets, Thermometer, Activity, Sprout, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-const InputField = ({ label, name, register, icon: Icon, min, max, step, defaultValue }) => (
-    <motion.div
-        className="relative group"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-    >
-        <label className="block text-sm font-medium text-zinc-600 mb-1.5 ml-1">{label}</label>
-        <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-nature-600 transition-colors">
-                <Icon className="h-5 w-5" />
+const InputField = ({ label, name, register, icon: Icon, min, max, step, defaultValue }) => {
+    const [isFocused, setIsFocused] = useState(false);
+
+    return (
+        <motion.div
+            className="relative group"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+        >
+            <div className={cn(
+                "relative transition-all duration-300 rounded-2xl p-1",
+                isFocused ? "bg-gradient-to-r from-nature-400 to-emerald-400 shadow-lg shadow-nature-500/20" : "bg-transparent"
+            )}>
+                <div className="relative bg-white/60 backdrop-blur-xl rounded-xl overflow-hidden border border-white/60 shadow-sm transition-all duration-300 group-hover:bg-white/80">
+                    <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center bg-zinc-50/50 border-r border-zinc-100">
+                        <Icon className={cn(
+                            "h-5 w-5 transition-colors duration-300",
+                            isFocused ? "text-nature-600" : "text-zinc-400"
+                        )} />
+                    </div>
+
+                    <div className="pl-14 pr-4 py-3">
+                        <label className={cn(
+                            "block text-xs font-semibold uppercase tracking-wider mb-0.5 transition-colors",
+                            isFocused ? "text-nature-700" : "text-zinc-500"
+                        )}>
+                            {label}
+                        </label>
+                        <input
+                            type="number"
+                            step={step}
+                            defaultValue={defaultValue}
+                            {...register(name, { required: true, valueAsNumber: true, min, max })}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
+                            className="w-full bg-transparent border-none p-0 text-zinc-900 font-medium focus:ring-0 placeholder:text-zinc-300 text-lg"
+                            placeholder="0.00"
+                        />
+                    </div>
+                </div>
             </div>
-            <input
-                type="number"
-                step={step}
-                defaultValue={defaultValue}
-                {...register(name, { required: true, valueAsNumber: true, min, max })}
-                className={cn(
-                    "block w-full pl-10 pr-3 py-2.5",
-                    "bg-white border border-zinc-200 rounded-xl",
-                    "text-zinc-900 placeholder:text-zinc-400",
-                    "focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500",
-                    "transition-all duration-200 ease-in-out",
-                    "hover:border-nature-300"
-                )}
-            />
-        </div>
-    </motion.div>
-);
+        </motion.div>
+    );
+};
 
 export const SoilForm = ({ onSubmit, isLoading }) => {
     const { register, handleSubmit } = useForm();
@@ -90,25 +106,32 @@ export const SoilForm = ({ onSubmit, isLoading }) => {
                 />
             </div>
 
-            <div className="flex justify-center pt-4">
+            <div className="flex justify-center pt-6">
                 <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isLoading}
                     className={cn(
-                        "flex items-center gap-2 px-8 py-3 rounded-full text-white font-semibold shadow-lg shadow-nature-500/30",
-                        "bg-gradient-to-r from-nature-500 to-nature-600 hover:from-nature-400 hover:to-nature-500",
+                        "group relative inline-flex items-center gap-3 px-10 py-4 rounded-full text-white font-bold shadow-xl shadow-nature-600/30 overflow-hidden",
+                        "bg-gradient-to-r from-nature-600 via-nature-500 to-emerald-600",
                         "transition-all duration-300",
-                        isLoading ? "opacity-70 cursor-wait" : ""
+                        isLoading ? "opacity-90 cursor-wait" : "hover:shadow-2xl hover:shadow-nature-600/50"
                     )}
                 >
+                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+
                     {isLoading ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <>
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <span className="relative z-10">Analyzing Soil DNA...</span>
+                        </>
                     ) : (
-                        <Sprout className="w-5 h-5" />
+                        <>
+                            <Sparkles className="w-5 h-5 relative z-10 animate-pulse-slow" />
+                            <span className="relative z-10 text-lg">Generate Analysis</span>
+                        </>
                     )}
-                    <span>{isLoading ? 'Analyzing Soil...' : 'Get Recommendation'}</span>
                 </motion.button>
             </div>
         </form>

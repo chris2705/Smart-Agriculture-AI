@@ -1,9 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-zinc-50 text-zinc-900;
+    @apply bg-zinc-50 text-zinc-900 font-sans antialiased;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(220, 252, 231, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(243, 232, 255, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(224, 231, 255, 0.4) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(254, 215, 170, 0.4) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/50 shadow-xl;
+  }
+  
+  .glass-input {
+    @apply bg-white/50 backdrop-blur-sm border border-zinc-200/60 focus:bg-white/80 focus:border-nature-500/50 transition-all duration-300;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
   }
 }

@@ -8,6 +8,11 @@ from pydantic import BaseModel
 from google.cloud import storage  # uses GOOGLE_APPLICATION_CREDENTIALS env var
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 app = FastAPI(title="Smart-Agriculture Backend API")
 
@@ -60,29 +65,36 @@ class ChatRequest(BaseModel):
     context: Optional[dict] = None
 
 @app.post("/chat")
-def chat(request: ChatRequest):
-    msg = request.message.lower()
+async def chat(request: ChatRequest):
+    msg = request.message
     context = request.context or {}
     
     # Extract context variables
     crop = context.get("prediction", "Unknown")
+    explanation = context.get("explanation", {})
+    fert_rec = explanation.get("fertilizer_recommendation", "Unknown")
     
-    response_text = ""
-    
-    if "why" in msg and crop != "Unknown":
-        response_text = f"{crop} is recommended because your soil's NPK levels and pH are optimal for its growth. It requires specific moisture conditions that match your input."
-    elif "fertilizer" in msg:
-        fert = context.get("explanation", {}).get("fertilizer_recommendation", "organic matter")
-        response_text = f"Based on the nutrient gaps, we recommend using {fert}. This will help balance the soil fertility."
-    elif "water" in msg or "irrigation" in msg:
-        if crop.lower() == "rice":
-             response_text = "Rice is a water-intensive crop. Ensure consistent flooding or heavy irrigation."
-        else:
-             response_text = f"For {crop}, maintain moderate soil moisture. Avoid waterlogging."
-    else:
-        response_text = f"I can help you with questions about {crop} farming, fertilizer usage, or general soil health. What would you like to know?"
-        
-    return {"response": response_text}
+    system_instruction = f"""You are a helpful and knowledgeable agricultural assistant. 
+You are helping a farmer who has just received a recommendation from an ML model.
+
+Context:
+- Predicted suitable crop: {crop}
+- Recommended fertilizer: {fert_rec}
+
+Answer the user's question based on the context provided. If the user asks "why", explain based on general agricultural knowledge for that crop and the fact that the soil conditions (NPK, pH, etc.) were found suitable by the model. Keep the answer concise, encouraging, and easy to understand for a farmer."""
+
+    try:
+        model = genai.GenerativeModel('gemini-2.0-flash-exp', system_instruction=system_instruction)
+        response = await model.generate_content_async(msg)
+        return {"response": response.text}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Gemini Error Detailed: {e}")
+        # Fallback to simple rule-based if Gemini fails
+        if "why" in msg.lower() and crop != "Unknown":
+            return {"response": f"{crop} is recommended because your soil's NPK levels and pH are optimal for its growth."}
+        return {"response": f"I'm having trouble connecting to my brain right now. Error: {str(e)}"}
 
 def download_blob_to(path_local: str, blob_path: str, bucket):
     blob = bucket.blob(blob_path)

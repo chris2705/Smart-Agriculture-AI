@@ -83,7 +83,34 @@ export const Chatbot = ({ context, fullScreen = false }) => {
 
         // Optional: Try to find a specific voice for the language
         const voices = synthRef.current.getVoices();
-        const voice = voices.find(v => v.lang === language);
+        console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+
+        // Try multiple matching strategies for Malayalam
+        let voice = null;
+        if (language === 'ml-IN') {
+            // Try exact match first
+            voice = voices.find(v => v.lang === 'ml-IN');
+            // Try Malayalam variants
+            if (!voice) voice = voices.find(v => v.lang.startsWith('ml'));
+            // Try by name containing Malayalam/Indian
+            if (!voice) voice = voices.find(v =>
+                v.name.toLowerCase().includes('malayalam') ||
+                v.name.toLowerCase().includes('indian')
+            );
+            // Try any Indian English voice as fallback
+            if (!voice) voice = voices.find(v => v.lang === 'en-IN');
+
+            if (!voice) {
+                console.warn('No Malayalam voice found. Using default voice. Consider installing Malayalam language pack in Windows Settings > Time & Language > Language.');
+            } else {
+                console.log('Using voice:', voice.name, voice.lang);
+            }
+        } else {
+            // For English, try to find en-US or en-GB
+            voice = voices.find(v => v.lang === language) ||
+                voices.find(v => v.lang.startsWith('en'));
+        }
+
         if (voice) {
             utterance.voice = voice;
         }

@@ -5,7 +5,6 @@ import json
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from google.cloud import storage  # uses GOOGLE_APPLICATION_CREDENTIALS env var
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
@@ -14,9 +13,15 @@ import google.generativeai as genai
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
+from fastapi.middleware.cors import CORSMiddleware
+from . import auth, models, database
+
+# Create tables
+models.Base.metadata.create_all(bind=database.engine)
+
 app = FastAPI(title="Smart-Agriculture Backend API")
 
-from fastapi.middleware.cors import CORSMiddleware
+app.include_router(auth.router)
 
 # Allow CORS for local React development
 origins = [
@@ -107,6 +112,7 @@ def download_blob_to(path_local: str, blob_path: str, bucket):
 def download_models_from_firebase():
     if not BUCKET_NAME:
         raise RuntimeError("FIREBASE_BUCKET not set. Cannot download models.")
+    from google.cloud import storage
     client = storage.Client()
     bucket = client.bucket(BUCKET_NAME)
     # download model files into MODEL_DIR / EXPL_DIR

@@ -7,3 +7,6 @@ google-cloud-storage
 firebase-admin
 python-dotenv
 google-generativeai
+python-jose[cryptography]
+passlib[bcrypt]
+sqlalchemy

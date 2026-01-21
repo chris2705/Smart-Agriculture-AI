@@ -7,11 +7,14 @@ import { Sprout, MessageCircle, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 
+import { useAuth } from '../context/AuthContext';
+
 export const Home = () => {
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
 
     const handleSubmit = async (data) => {
         setLoading(true);
@@ -79,6 +82,27 @@ export const Home = () => {
                     <p className="text-xl md:text-2xl text-zinc-600 max-w-2xl mx-auto leading-relaxed font-light">
                         Advanced machine learning analysis for precision soil diagnostics and optimal crop yields.
                     </p>
+
+                    <div className="absolute top-4 right-4 md:top-0 md:right-0">
+                        {user ? (
+                            <div className="flex items-center gap-3 bg-white p-2 pr-4 rounded-full shadow-lg border border-zinc-100">
+                                <div className="w-10 h-10 bg-nature-100 rounded-full flex items-center justify-center text-nature-700 font-bold">
+                                    {user.full_name?.[0]?.toUpperCase() || 'U'}
+                                </div>
+                                <div className="text-left hidden md:block">
+                                    <div className="text-sm font-bold text-zinc-900">{user.full_name}</div>
+                                    <button onClick={logout} className="text-xs text-red-500 hover:text-red-600 font-medium">Sign Out</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => window.location.href = '/login'}
+                                className="bg-white hover:bg-zinc-50 text-zinc-900 px-6 py-2.5 rounded-full font-semibold shadow-lg border border-zinc-100 transition-all hover:scale-105"
+                            >
+                                Log In
+                            </button>
+                        )}
+                    </div>
                 </motion.div>
 
                 <div className="space-y-12">

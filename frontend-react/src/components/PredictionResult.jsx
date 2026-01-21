@@ -131,6 +131,78 @@ export const PredictionResult = ({ result }) => {
                     </div>
                 </motion.div>
             )}
+
+            {/* XAI Section */}
+            {(result.shap_summary_url || result.lime_examples) && (
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="space-y-6"
+                >
+                    <div className="flex items-center gap-2">
+                        <div className="h-1 w-12 bg-purple-500 rounded-full" />
+                        <h2 className="text-2xl font-bold text-zinc-800">Model Insights (XAI)</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* SHAP Plot */}
+                        {result.shap_summary_url && (
+                            <div className="bg-white rounded-3xl p-6 shadow-xl border border-zinc-100">
+                                <h3 className="text-lg font-bold text-zinc-700 mb-4 flex items-center gap-2">
+                                    Global Feature Importance (SHAP)
+                                    <span className="text-xs font-normal text-zinc-400 px-2 py-1 bg-zinc-100 rounded-full">Global</span>
+                                </h3>
+                                <div className="aspect-[4/3] bg-zinc-50 rounded-xl overflow-hidden relative">
+                                    <img
+                                        src={`http://${window.location.hostname}:8000${result.shap_summary_url}`}
+                                        alt="SHAP Summary"
+                                        className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
+                                    />
+                                </div>
+                                <p className="text-zinc-500 text-sm mt-4">
+                                    Shows which features (Nitrogen, pH, etc.) generally have the biggest impact on the model's decisions.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* LIME Examples */}
+                        {result.lime_examples && (
+                            <div className="bg-white rounded-3xl p-6 shadow-xl border border-zinc-100">
+                                <h3 className="text-lg font-bold text-zinc-700 mb-4 flex items-center gap-2">
+                                    Decision Logic Samples (LIME)
+                                    <span className="text-xs font-normal text-zinc-400 px-2 py-1 bg-zinc-100 rounded-full">Local</span>
+                                </h3>
+                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {result.lime_examples.slice(0, 3).map((example, idx) => (
+                                        <div key={idx} className="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                                            <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Logic Path #{idx + 1}</div>
+                                            <div className="space-y-2">
+                                                {example.explanation.slice(0, 3).map(([condition, weight], i) => (
+                                                    <div key={i} className="flex items-center justify-between text-sm">
+                                                        <code className="bg-white px-2 py-1 rounded border border-zinc-200 text-zinc-600 font-mono text-xs truncate max-w-[70%]">
+                                                            {condition}
+                                                        </code>
+                                                        <span className={cn(
+                                                            "font-medium",
+                                                            weight > 0 ? "text-emerald-600" : "text-red-500"
+                                                        )}>
+                                                            {weight > 0 ? "+" : ""}{weight.toFixed(3)}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-zinc-500 text-sm mt-4">
+                                    Sample decision paths showing how specific conditions (normalized values) influence the prediction score.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            )}
         </div>
     );
 };

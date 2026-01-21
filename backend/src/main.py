@@ -79,14 +79,22 @@ async def chat(request: ChatRequest):
     explanation = context.get("explanation", {})
     fert_rec = explanation.get("fertilizer_recommendation", "Unknown")
     
+    language = context.get("language", "en-US")
+    is_malayalam = language == "ml-IN"
+
     system_instruction = f"""You are a helpful and knowledgeable agricultural assistant. 
 You are helping a farmer who has just received a recommendation from an ML model.
 
 Context:
 - Predicted suitable crop: {crop}
 - Recommended fertilizer: {fert_rec}
+- User Language: {"Malayalam" if is_malayalam else "English"}
 
-Answer the user's question based on the context provided. If the user asks "why", explain based on general agricultural knowledge for that crop and the fact that the soil conditions (NPK, pH, etc.) were found suitable by the model. Keep the answer concise, encouraging, and easy to understand for a farmer."""
+Answer the user's question based on the context provided. If the user asks "why", explain based on general agricultural knowledge for that crop and the fact that the soil conditions (NPK, pH, etc.) were found suitable by the model. 
+
+IMPORTANT:
+- If User Language is Malayalam, you MUST reply entirely in Malayalam script.
+- Keep the answer concise, encouraging, and easy to understand for a farmer."""
 
     try:
         model = genai.GenerativeModel('gemini-2.0-flash-exp', system_instruction=system_instruction)

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
 import { chat } from '../api/client';
@@ -11,13 +12,15 @@ export const Chatbot = ({ context, fullScreen = false }) => {
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
+    const hasShownWelcome = useRef(false);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
     useEffect(() => {
-        if (context?.prediction) {
+        if (context?.prediction && !hasShownWelcome.current) {
+            hasShownWelcome.current = true;
             setMessages(prev => [
                 ...prev,
                 { id: Date.now(), text: `I see you got a recommendation for **${context.prediction}**. Feel free to ask me why, or about fertilizer usage!`, sender: 'bot' }
@@ -84,7 +87,9 @@ export const Chatbot = ({ context, fullScreen = false }) => {
                                 ? "bg-zinc-800 text-white rounded-tr-none"
                                 : "bg-white border border-zinc-200 text-zinc-700 rounded-tl-none shadow-sm"
                         )}>
-                            {msg.text}
+                            <ReactMarkdown className="prose prose-sm max-w-none dark:prose-invert">
+                                {msg.text}
+                            </ReactMarkdown>
                         </div>
                     </motion.div>
                 ))}

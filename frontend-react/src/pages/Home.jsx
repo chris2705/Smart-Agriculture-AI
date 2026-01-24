@@ -6,6 +6,7 @@ import { predict } from '../api/client';
 import { Sprout, MessageCircle, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { PlantBackground } from '../components/PlantBackground';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -52,6 +53,8 @@ export const Home = () => {
 
     return (
         <div className="min-h-screen relative overflow-x-hidden pb-32">
+            {/* Full-screen plant background */}
+            <PlantBackground opacity={0.15} />
 
             <main className="container mx-auto px-4 py-12 lg:py-20 max-w-5xl">
                 <motion.div

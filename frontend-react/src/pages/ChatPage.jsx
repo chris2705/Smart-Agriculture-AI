@@ -4,6 +4,7 @@ import { Chatbot } from '../components/Chatbot';
 import { ArrowLeft, Sprout } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { PlantBackground } from '../components/PlantBackground';
 
 export const ChatPage = () => {
     const location = useLocation();
@@ -12,6 +13,8 @@ export const ChatPage = () => {
 
     return (
         <div className="min-h-screen bg-zinc-50 flex flex-col relative overflow-hidden">
+            {/* Full-screen plant background */}
+            <PlantBackground opacity={0.1} />
             {/* Background decoration matching Home */}
             <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-nature-100/50 to-transparent -z-10" />
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-nature-200/30 rounded-full blur-3xl -z-10" />

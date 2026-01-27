@@ -94,7 +94,11 @@ export const Home = () => {
                                 </div>
                                 <div className="text-left hidden md:block">
                                     <div className="text-sm font-bold text-zinc-900">{user.full_name}</div>
-                                    <button onClick={logout} className="text-xs text-red-500 hover:text-red-600 font-medium">Sign Out</button>
+                                    <div className="flex gap-2 text-xs font-medium">
+                                        <button onClick={() => navigate('/dashboard')} className="text-nature-600 hover:text-nature-700 hover:underline">Dashboard</button>
+                                        <span className="text-zinc-300">|</span>
+                                        <button onClick={logout} className="text-red-500 hover:text-red-600">Sign Out</button>
+                                    </div>
                                 </div>
                             </div>
                         ) : (

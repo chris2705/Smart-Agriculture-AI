@@ -1,0 +1,157 @@
+<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Main gradient background -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f0f7f0;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#e8f4f0;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#d4e8d8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c8e0d0;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Soil gradient -->
+    <linearGradient id="soilGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a89080;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#8b7355;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Leaf gradient for depth -->
+    <linearGradient id="leafGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6ec34d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5ba540;stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="leafGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7fd85a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6bc34a;stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="leafGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8bcd5f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#76b940;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Light reflection -->
+    <radialGradient id="lightReflection" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Falling leaves animation -->
+    <style>
+      @keyframes fallLeaf1 {
+        0% { transform: translateY(-100px) translateX(0px) rotate(0deg); opacity: 0; }
+        5% { opacity: 0.6; }
+        95% { opacity: 0.6; }
+        100% { transform: translateY(1080px) translateX(60px) rotate(360deg); opacity: 0; }
+      }
+      @keyframes fallLeaf2 {
+        0% { transform: translateY(-100px) translateX(0px) rotate(0deg); opacity: 0; }
+        5% { opacity: 0.5; }
+        95% { opacity: 0.5; }
+        100% { transform: translateY(1080px) translateX(-80px) rotate(-360deg); opacity: 0; }
+      }
+      @keyframes fallLeaf3 {
+        0% { transform: translateY(-100px) translateX(0px) rotate(0deg); opacity: 0; }
+        5% { opacity: 0.4; }
+        95% { opacity: 0.4; }
+        100% { transform: translateY(1080px) translateX(100px) rotate(360deg); opacity: 0; }
+      }
+      .falling-leaf-1 { animation: fallLeaf1 8s linear infinite; }
+      .falling-leaf-2 { animation: fallLeaf2 10s linear infinite 2s; }
+      .falling-leaf-3 { animation: fallLeaf3 12s linear infinite 4s; }
+    </style>
+  </defs>
+
+  <!-- Background gradient -->
+  <rect width="1920" height="1080" fill="url(#bgGradient)"/>
+
+  <!-- Light reflection overlay -->
+  <ellipse cx="400" cy="200" rx="600" ry="400" fill="url(#lightReflection)"/>
+
+  <!-- Soil base -->
+  <ellipse cx="960" cy="950" rx="800" ry="200" fill="url(#soilGradient)"/>
+  
+  <!-- Soil texture details -->
+  <circle cx="600" cy="980" r="40" fill="#9d8372" opacity="0.4"/>
+  <circle cx="1200" cy="1000" r="50" fill="#7a6248" opacity="0.3"/>
+  <circle cx="800" cy="1020" r="35" fill="#8b7355" opacity="0.3"/>
+  <circle cx="1400" cy="990" r="45" fill="#9d8372" opacity="0.25"/>
+
+  <!-- Main plant stem -->
+  <path d="M 960 920 Q 940 800 955 650 Q 960 500 945 350" 
+        stroke="#5a9e3e" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- Secondary stems -->
+  <path d="M 955 650 Q 1020 600 1080 550" 
+        stroke="#6bb849" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M 960 500 Q 900 450 850 400" 
+        stroke="#5a9e3e" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M 945 350 Q 1000 300 1050 250" 
+        stroke="#6bb849" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+  <!-- Left leaf cluster 1 (lower) -->
+  <ellipse cx="850" cy="750" rx="120" ry="200" fill="url(#leafGradient1)" 
+           transform="rotate(-35 850 750)" opacity="0.9"/>
+  <ellipse cx="820" cy="700" rx="110" ry="180" fill="url(#leafGradient2)" 
+           transform="rotate(-45 820 700)" opacity="0.85"/>
+
+  <!-- Right leaf cluster 1 (lower) -->
+  <ellipse cx="1070" cy="780" rx="130" ry="210" fill="url(#leafGradient2)" 
+           transform="rotate(35 1070 780)" opacity="0.9"/>
+  <ellipse cx="1100" cy="730" rx="115" ry="190" fill="url(#leafGradient1)" 
+           transform="rotate(45 1100 730)" opacity="0.85"/>
+
+  <!-- Left leaf cluster 2 (middle) -->
+  <ellipse cx="800" cy="550" rx="100" ry="170" fill="url(#leafGradient3)" 
+           transform="rotate(-40 800 550)" opacity="0.9"/>
+  <ellipse cx="770" cy="510" rx="95" ry="160" fill="url(#leafGradient1)" 
+           transform="rotate(-50 770 510)" opacity="0.85"/>
+
+  <!-- Right leaf cluster 2 (middle) -->
+  <ellipse cx="1120" cy="580" rx="110" ry="180" fill="url(#leafGradient2)" 
+           transform="rotate(40 1120 580)" opacity="0.9"/>
+  <ellipse cx="1150" cy="540" rx="100" ry="170" fill="url(#leafGradient3)" 
+           transform="rotate(50 1150 540)" opacity="0.85"/>
+
+  <!-- Left leaf cluster 3 (upper) -->
+  <ellipse cx="780" cy="350" rx="95" ry="160" fill="url(#leafGradient1)" 
+           transform="rotate(-38 780 350)" opacity="0.9"/>
+  <ellipse cx="750" cy="310" rx="90" ry="150" fill="url(#leafGradient2)" 
+           transform="rotate(-48 750 310)" opacity="0.85"/>
+
+  <!-- Right leaf cluster 3 (upper) -->
+  <ellipse cx="1140" cy="380" rx="105" ry="175" fill="url(#leafGradient3)" 
+           transform="rotate(38 1140 380)" opacity="0.9"/>
+  <ellipse cx="1170" cy="340" rx="98" ry="165" fill="url(#leafGradient1)" 
+           transform="rotate(48 1170 340)" opacity="0.85"/>
+
+  <!-- Top leaves (smallest) -->
+  <ellipse cx="800" cy="180" rx="80" ry="140" fill="url(#leafGradient2)" 
+           transform="rotate(-40 800 180)" opacity="0.9"/>
+  <ellipse cx="1120" cy="200" rx="85" ry="145" fill="url(#leafGradient3)" 
+           transform="rotate(40 1120 200)" opacity="0.9"/>
+
+  <!-- Leaf vein details (subtle) -->
+  <path d="M 850 750 L 920 550" stroke="#5a9e3e" stroke-width="1" opacity="0.3"/>
+  <path d="M 1070 780 L 1050 560" stroke="#5a9e3e" stroke-width="1" opacity="0.3"/>
+
+  <!-- Falling leaves -->
+  <g class="falling-leaf-1">
+    <ellipse cx="300" cy="200" rx="25" ry="40" fill="#7fd85a" opacity="0.5" transform="rotate(-20 300 200)"/>
+  </g>
+
+  <g class="falling-leaf-2">
+    <ellipse cx="1200" cy="150" rx="28" ry="42" fill="#6ec34d" opacity="0.4" transform="rotate(25 1200 150)"/>
+  </g>
+
+  <g class="falling-leaf-3">
+    <ellipse cx="700" cy="100" rx="26" ry="41" fill="#8bcd5f" opacity="0.45" transform="rotate(-15 700 100)"/>
+  </g>
+
+  <!-- Subtle light rays effect -->
+  <path d="M 400 100 L 350 400" stroke="#ffffff" stroke-width="2" opacity="0.08" stroke-linecap="round"/>
+  <path d="M 1500 150 L 1580 450" stroke="#ffffff" stroke-width="2" opacity="0.08" stroke-linecap="round"/>
+
+  <!-- Additional soft light overlay -->
+  <ellipse cx="1500" cy="400" rx="500" ry="350" fill="url(#lightReflection)"/>
+</svg>

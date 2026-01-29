@@ -3,9 +3,13 @@ import axios from 'axios';
 // Automatically use the same hostname as the frontend (localhost or network IP)
 const BACKEND_URL = `http://${window.location.hostname}:8000`;
 
-export const predict = async (features) => {
+export const predict = async (features, currentCrop = null) => {
     try {
-        const response = await axios.post(`${BACKEND_URL}/predict`, { features });
+        const payload = { features };
+        if (currentCrop) {
+            payload.current_crop = currentCrop;
+        }
+        const response = await axios.post(`${BACKEND_URL}/predict`, payload);
         return response.data;
     } catch (error) {
         if (error.response) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,8 +11,15 @@ export const AuthPage = () => {
     const [formData, setFormData] = useState({ email: '', password: '', fullName: '' });
     const [error, setError] = useState('');
 
-    const { login, register } = useAuth();
+    const { login, register, user, loading } = useAuth();
     const navigate = useNavigate();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (!loading && user) {
+            navigate('/dashboard');
+        }
+    }, [user, loading, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -24,7 +31,7 @@ export const AuthPage = () => {
             : await register(formData.fullName, formData.email, formData.password);
 
         if (res.success) {
-            navigate('/');
+            navigate('/dashboard');
         } else {
             setError(res.message);
         }

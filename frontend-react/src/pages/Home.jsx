@@ -103,7 +103,7 @@ export const Home = () => {
                             </div>
                         ) : (
                             <button
-                                onClick={() => window.location.href = '/login'}
+                                onClick={() => navigate('/')}
                                 className="bg-white hover:bg-zinc-50 text-zinc-900 px-6 py-2.5 rounded-full font-semibold shadow-lg border border-zinc-100 transition-all hover:scale-105"
                             >
                                 Log In

@@ -1,28 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, Sprout, MapPin, Ruler, Check } from 'lucide-react';
+import { X, ArrowRight, Sprout, MapPin, Ruler, Check, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { SoilForm } from './SoilForm'; // Reusing for logic, or we can extract input styles
-import { predict } from '../api/client';
-import { AnalysisCard } from './AnalysisCard';
 import { cn } from '../lib/utils';
+import axios from 'axios';
 
 const steps = [
     { id: 'activity', title: 'Start' },
-    { id: 'details', title: 'Details' },
-    { id: 'soil', title: 'Soil Data' },
-    { id: 'analysis', title: 'Analysis' }
+    { id: 'details', title: 'Details' }
 ];
 
 export const AddFieldWizard = ({ onClose, onComplete }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [formData, setFormData] = useState({});
-    const [analysisResult, setAnalysisResult] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const { register, handleSubmit, trigger, formState: { errors } } = useForm();
-    // Use separate form instance for soil data if needed, or share context.
-    // simpler to just manage state manually for the wizard flow or use form hook for each step.
+    // Reset wizard state when component mounts
+    useEffect(() => {
+        setCurrentStep(0);
+        setFormData({});
+        setIsSaving(false);
+    }, []);
 
     const nextStep = () => setCurrentStep(prev => prev + 1);
     const prevStep = () => setCurrentStep(prev => prev - 1);
@@ -33,44 +31,49 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
     };
 
     const handleDetailsSubmit = async (data) => {
-        setFormData({ ...formData, ...data });
-        // Assume soil form is next
-        nextStep();
-    };
-
-    const handleSoilSubmit = async (soilData) => {
-        setLoading(true);
+        setIsSaving(true);
+        console.log("Starting field save...", data);
         try {
-            // Predict crop based on soil params
-            const NPK_total = soilData.nitrogen + soilData.phosphorus + soilData.potassium;
-            const features = [
-                soilData.nitrogen,
-                soilData.phosphorus,
-                soilData.potassium,
-                soilData.pH,
-                soilData.moisture,
-                soilData.temperature,
-                NPK_total
-            ];
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("No authentication token found. Please log in again.");
+                setIsSaving(false);
+                return;
+            }
 
-            const response = await predict(features);
-            setAnalysisResult(response);
-            setFormData({ ...formData, ...soilData }); // Merge
-            nextStep();
-        } catch (err) {
-            console.error(err);
+            const newField = {
+                name: data.name,
+                location: data.location,
+                size: parseFloat(data.size),
+                crop_type: formData.hasCrop ? data.selectedCrop : "None"
+            };
+
+            console.log("Sending field data:", newField);
+
+            const BACKEND_URL = `http://${window.location.hostname}:8000`;
+            const res = await axios.post(`${BACKEND_URL}/fields/`, newField, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            console.log("Field saved successfully:", res.data);
+
+            onComplete(res.data);
+            onClose();
+        } catch (error) {
+            console.error("Failed to save field", error);
+
+            // Check if it's an authentication error
+            if (error.response?.status === 401) {
+                alert("Your session has expired. Please log in again.");
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+                return;
+            }
+
+            alert(`Failed to save field: ${error.response?.data?.detail || error.message}`);
         } finally {
-            setLoading(false);
+            setIsSaving(false);
         }
-    };
-
-    const finishWizard = () => {
-        onComplete({
-            ...formData,
-            cropType: formData.hasCrop ? (formData.selectedCrop || 'Unknown') : analysisResult?.prediction,
-            recommendedCrop: analysisResult?.prediction,
-            // Include soil data in field record
-        });
     };
 
     // --- Sub-components for steps ---
@@ -103,6 +106,21 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
 
     const DetailsStep = () => {
         const { register, handleSubmit } = useForm({ defaultValues: formData });
+        const [supportedCrops, setSupportedCrops] = useState([]);
+        const [loadingCrops, setLoadingCrops] = useState(false);
+
+        React.useEffect(() => {
+            if (formData.hasCrop) {
+                setLoadingCrops(true);
+                const BACKEND_URL = `http://${window.location.hostname}:8000`;
+                fetch(`${BACKEND_URL}/supported-crops`)
+                    .then(res => res.json())
+                    .then(data => setSupportedCrops(data.crops || []))
+                    .catch(e => console.error("Failed to fetch crops", e))
+                    .finally(() => setLoadingCrops(false));
+            }
+        }, []);
+
         return (
             <form onSubmit={handleSubmit(handleDetailsSubmit)} className="space-y-6 mt-6">
                 <div>
@@ -129,18 +147,21 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
                         <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Current Crop</label>
                         <select {...register("selectedCrop", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white">
                             <option value="">Select a crop...</option>
-                            <option value="Rice">Rice</option>
-                            <option value="Maize">Maize</option>
-                            <option value="Coffee">Coffee</option>
-                            <option value="Cotton">Cotton</option>
-                            <option value="Kidneybeans">Kidney Beans</option>
+                            {loadingCrops ? <option disabled>Loading...</option> : supportedCrops.map(crop => (
+                                <option key={crop} value={crop}>{crop}</option>
+                            ))}
                         </select>
                     </div>
                 )}
 
                 <div className="flex justify-end pt-4">
-                    <button type="submit" className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2">
-                        Next Step <ArrowRight className="w-4 h-4" />
+                    <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        {isSaving ? 'Saving...' : 'Save Field'}
                     </button>
                 </div>
             </form>
@@ -185,30 +206,6 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
                         >
                             {currentStep === 0 && <ActivityStep />}
                             {currentStep === 1 && <DetailsStep />}
-                            {currentStep === 2 && (
-                                <div className="mt-4">
-                                    <h3 className="text-lg font-bold text-zinc-900 mb-4">Soil Parameters</h3>
-                                    <SoilForm onSubmit={handleSoilSubmit} isLoading={loading} />
-                                </div>
-                            )}
-                            {currentStep === 3 && analysisResult && (
-                                <div className="mt-4">
-                                    <AnalysisCard
-                                        mode={formData.hasCrop ? 'existing' : 'new'}
-                                        data={formData}
-                                        selectedCrop={formData.selectedCrop}
-                                        recommendedCrop={analysisResult.prediction}
-                                        onAction={finishWizard}
-                                    />
-                                    {formData.hasCrop && (
-                                        <div className="mt-6 flex justify-end">
-                                            <button onClick={finishWizard} className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-semibold">
-                                                Save Field
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </motion.div>
                     </AnimatePresence>
                 </div>

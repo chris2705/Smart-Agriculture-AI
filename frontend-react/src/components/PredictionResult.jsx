@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 import { Sprout, TestTube, CheckCircle2, TrendingUp, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -50,14 +51,16 @@ export const PredictionResult = ({ result }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ResultCard
-                    title="Optimal Crop"
-                    value={result.prediction}
-                    icon={Sprout}
-                    colorClass="bg-nature-600 text-nature-600"
-                    gradient="from-nature-400 to-emerald-400"
-                    delay={0.1}
-                />
+                {!result.existing_crop_analysis && (
+                    <ResultCard
+                        title="Optimal Crop"
+                        value={result.prediction}
+                        icon={Sprout}
+                        colorClass="bg-nature-600 text-nature-600"
+                        gradient="from-nature-400 to-emerald-400"
+                        delay={0.1}
+                    />
+                )}
                 <ResultCard
                     title="Recommended Fertilizer"
                     value={result.explanation?.fertilizer_recommendation}
@@ -68,69 +71,78 @@ export const PredictionResult = ({ result }) => {
                 />
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="glass-panel rounded-[2rem] p-8 md:p-10 relative overflow-hidden"
-            >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-nature-100/50 rounded-full blur-3xl -z-10 -mr-16 -mt-16" />
-
-                <h3 className="text-xl font-bold text-zinc-800 mb-8 flex items-center gap-3">
-                    <Activity className="w-6 h-6 text-nature-600" />
-                    Crop Probability Analysis
-                </h3>
-
-                <div className="space-y-6">
-                    {sortedProbs.map(([crop, prob], idx) => (
-                        <div key={crop} className="relative group">
-                            <div className="flex justify-between items-end mb-2">
-                                <span className="font-semibold text-zinc-700 capitalize text-lg">{crop}</span>
-                                <span className="font-mono text-sm font-medium text-zinc-500">{(prob * 100).toFixed(1)}%</span>
-                            </div>
-                            <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden shadow-inner">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${prob * 100}%` }}
-                                    transition={{ duration: 1.5, delay: 0.5 + (idx * 0.1), ease: "easeOut" }}
-                                    className={cn(
-                                        "h-full rounded-full relative overflow-hidden",
-                                        idx === 0 ? "bg-gradient-to-r from-nature-500 to-emerald-500" : "bg-zinc-300"
-                                    )}
-                                >
-                                    {idx === 0 && (
-                                        <div className="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]" />
-                                    )}
-                                </motion.div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </motion.div>
-
-            {result.explanation && (
+            {!result.existing_crop_analysis ? (
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-2xl p-8 border border-blue-100/50 relative overflow-hidden"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="glass-panel rounded-[2rem] p-8 md:p-10 relative overflow-hidden"
                 >
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400" />
-                    <div className="flex gap-4">
-                        <div className="flex-shrink-0 p-3 bg-blue-100 rounded-full h-fit">
-                            <CheckCircle2 className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-blue-900 text-lg mb-2">AI Recommendation Engine</h4>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-nature-100/50 rounded-full blur-3xl -z-10 -mr-16 -mt-16" />
+
+                    <h3 className="text-xl font-bold text-zinc-800 mb-8 flex items-center gap-3">
+                        <Activity className="w-6 h-6 text-nature-600" />
+                        Crop Probability Analysis
+                    </h3>
+
+                    <div className="space-y-6">
+                        {sortedProbs.map(([crop, prob], idx) => (
+                            <div key={crop} className="relative group">
+                                <div className="flex justify-between items-end mb-2">
+                                    <span className="font-semibold text-zinc-700 capitalize text-lg">{crop}</span>
+                                    <span className="font-mono text-sm font-medium text-zinc-500">{(prob * 100).toFixed(1)}%</span>
+                                </div>
+                                <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden shadow-inner">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${prob * 100}%` }}
+                                        transition={{ duration: 1.5, delay: 0.5 + (idx * 0.1), ease: "easeOut" }}
+                                        className={cn(
+                                            "h-full rounded-full relative overflow-hidden",
+                                            idx === 0 ? "bg-gradient-to-r from-nature-500 to-emerald-500" : "bg-zinc-300"
+                                        )}
+                                    >
+                                        {idx === 0 && (
+                                            <div className="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]" />
+                                        )}
+                                    </motion.div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            ) : null}
+
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6 }}
+                className="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-2xl p-8 border border-blue-100/50 relative overflow-hidden"
+            >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400" />
+                <div className="flex gap-4">
+                    <div className="flex-shrink-0 p-3 bg-blue-100 rounded-full h-fit">
+                        <CheckCircle2 className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="w-full">
+                        <h4 className="font-bold text-blue-900 text-lg mb-2">
+                            {result.existing_crop_analysis ? 'Crop Health Analysis' : 'AI Recommendation Engine'}
+                        </h4>
+
+                        {result.existing_crop_analysis ? (
+                            <div className="text-blue-900/80 leading-relaxed text-base prose prose-blue max-w-none">
+                                <ReactMarkdown>{result.existing_crop_analysis}</ReactMarkdown>
+                            </div>
+                        ) : (
                             <p className="text-blue-800/80 leading-relaxed text-lg">
                                 Based on your soil's unique profile, <span className="font-bold text-blue-900 underline decoration-blue-300 decoration-2 underline-offset-2">{result.prediction}</span> has been identified as the optimal crop choice.
                                 Our model analyzed the nutrient balance (N: {result.explanation.input_data?.nitrogen}, P: {result.explanation.input_data?.phosphorus}, K: {result.explanation.input_data?.potassium})
                                 to ensure maximum yield potential.
                             </p>
-                        </div>
+                        )}
                     </div>
-                </motion.div>
-            )}
+                </div>
+            </motion.div>
 
             {/* XAI Section */}
             {(result.shap_summary_url || result.lime_examples) && (

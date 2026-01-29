@@ -14,7 +14,7 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 from fastapi.middleware.cors import CORSMiddleware
-from . import auth, models, database
+from . import auth, models, database, fields
 
 # Create tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -22,6 +22,7 @@ models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(title="Smart-Agriculture Backend API")
 
 app.include_router(auth.router)
+app.include_router(fields.router)
 
 # Allow CORS for local React development
 origins = [
@@ -64,6 +65,7 @@ FILES = {
 
 class Features(BaseModel):
     features: list  # [nitrogen, phosphorus, potassium, pH, moisture, temperature, NPK_total]
+    current_crop: Optional[str] = None
 
 class ChatRequest(BaseModel):
     message: str
@@ -83,21 +85,21 @@ async def chat(request: ChatRequest):
     is_malayalam = language == "ml-IN"
 
     system_instruction = f"""You are a helpful and knowledgeable agricultural assistant. 
-You are helping a farmer who has just received a recommendation from an ML model.
+    You are helping a farmer who has just received a recommendation from an ML model.
 
-Context:
-- Predicted suitable crop: {crop}
-- Recommended fertilizer: {fert_rec}
-- User Language: {"Malayalam" if is_malayalam else "English"}
+    Context:
+    - Predicted suitable crop: {crop}
+    - Recommended fertilizer: {fert_rec}
+    - User Language: {"Malayalam" if is_malayalam else "English"}
 
-Answer the user's question based on the context provided. If the user asks "why", explain based on general agricultural knowledge for that crop and the fact that the soil conditions (NPK, pH, etc.) were found suitable by the model. 
+    Answer the user's question based on the context provided. If the user asks "why", explain based on general agricultural knowledge for that crop and the fact that the soil conditions (NPK, pH, etc.) were found suitable by the model. 
 
-IMPORTANT:
-- If User Language is Malayalam, you MUST reply entirely in Malayalam script.
-- Keep the answer concise, encouraging, and easy to understand for a farmer."""
+    IMPORTANT:
+    - If User Language is Malayalam, you MUST reply entirely in Malayalam script.
+    - Keep the answer concise, encouraging, and easy to understand for a farmer."""
 
     try:
-        model = genai.GenerativeModel('gemini-2.0-flash-exp', system_instruction=system_instruction)
+        model = genai.GenerativeModel('gemini-2.5-flash', system_instruction=system_instruction)
         response = await model.generate_content_async(msg)
         return {"response": response.text}
     except Exception as e:
@@ -165,45 +167,137 @@ def startup_event():
 app.mount("/static_explanations", StaticFiles(directory=EXPL_DIR), name="explanations")
 
 @app.post("/predict")
-def predict(payload: Features):
+async def predict(payload: Features):
     feats = payload.features
+    current_crop = payload.current_crop
+
     if len(feats) != 7:
         raise HTTPException(status_code=400, detail="features must be length 7: [nitrogen, phosphorus, potassium, pH, moisture, temperature, NPK_total]")
     arr = np.array(feats).reshape(1, -1)
+    
     try:
         arr_s = SCALER.transform(arr)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Scaler error: {e}")
-    pred_idx = int(CROP_MODEL.predict(arr_s)[0])
-    proba = CROP_MODEL.predict_proba(arr_s)[0].tolist()
-    pred_label = str(CROP_LE.inverse_transform([pred_idx])[0])
 
+    # Always predict fertilizer
     fert_idx = int(FERT_MODEL.predict(arr_s)[0])
     fert_label = str(FERT_LE.inverse_transform([fert_idx])[0])
 
-    # Try to attach shap/lime if downloaded
-    shap_path = os.path.join(EXPL_DIR, "shap_summary.png")
-    lime_path = os.path.join(EXPL_DIR, "lime_examples.json")
+    pred_label = "N/A"
+    proba = []
     lime_examples = None
-    if os.path.exists(lime_path):
-        try:
-            with open(lime_path, "r") as f:
-                lime_examples = json.load(f)
-        except Exception:
-            lime_examples = None
+    shap_path = os.path.join(EXPL_DIR, "shap_summary.png")
+    
+    if not current_crop or current_crop == "None":
+        # Normal prediction flow
+        pred_idx = int(CROP_MODEL.predict(arr_s)[0])
+        proba = CROP_MODEL.predict_proba(arr_s)[0].tolist()
+        pred_label = str(CROP_LE.inverse_transform([pred_idx])[0])
 
+        # Load LIME only if standard prediction
+        lime_path = os.path.join(EXPL_DIR, "lime_examples.json")
+        if os.path.exists(lime_path):
+            try:
+                with open(lime_path, "r") as f:
+                    lime_examples = json.load(f)
+            except Exception:
+                lime_examples = None
+    
     explanation = {
         "fertilizer_recommendation": fert_label,
-        "crop_probabilities": {str(cls): float(p) for cls, p in zip(CROP_LE.classes_.tolist(), proba)}
+        "crop_probabilities": {str(cls): float(p) for cls, p in zip(CROP_LE.classes_.tolist(), proba)} if proba else {}
     }
+
+    # If existing crop, use Gemini for analysis
+    existing_crop_analysis = None
+    if current_crop and current_crop != "None":
+        pred_label = current_crop # Set for frontend consistency
+        try:
+            prompt = f"""
+            You are an expert agronomist. A farmer is currently growing '{current_crop}'.
+            Soil parameters: N={feats[0]}, P={feats[1]}, K={feats[2]}, pH={feats[3]}, Moisture={feats[4]}%, Temp={feats[5]}°C.
+            Recommended fertilizer: {fert_label}.
+
+            Provide a VERY CONCISE analysis in bullet points:
+            *   State which key nutrient (N, P, or K) is low based on the fertilizer recommendation.
+            *   Mention if pH or moisture is within optimal range for {current_crop}.
+            *   One quick action tip.
+            
+            Do not include headers. Just the bullets.
+            """
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            response = await model.generate_content_async(prompt)
+            existing_crop_analysis = response.text
+        except Exception as e:
+            print(f"Gemini analysis failed: {e}")
+            
+            # Fallback logic based on fertilizer
+            fert_insights = {
+                "Urea": [
+                    "Nitrogen levels are likely low.",
+                    "Urea is recommended to boost leafy growth.",
+                    "Ensure adequate watering after application."
+                ],
+                "DAP": [
+                    "Phosphorus levels appear low.",
+                    "DAP will help with root development.",
+                    "Nitrogen is also supplied for general health."
+                ],
+                "14-35-14": [
+                    "High Phosphorus needed likely due to root system requirements.",
+                    "Standard NPK balance required.",
+                    "Apply near the root zone."
+                ],
+                "28-28": [
+                    "Both Nitrogen and Phosphorus are needed.",
+                    "Balanced growth and root support required.",
+                    "Monitor soil moisture."
+                ],
+                "17-17-17": [
+                    "Balanced nutrient deficiency detected.",
+                    "Equal parts N-P-K needed for general maintenance.",
+                    "Good for overall plant health."
+                ],
+                "20-20": [
+                    "Nitrogen and Phosphorus replenishment needed.",
+                    "Boosts vegetative and root growth.",
+                    "Apply evenly."
+                ],
+                "10-26-26": [
+                    "High need for Phosphorus and Potassium.",
+                    "Vital for flowering and fruit setting stages.",
+                    "Nitrogen requirement is lower."
+                ]
+            }
+            
+            fallback_bullets = fert_insights.get(fert_label, [
+                "Nutrient imbalance detected.",
+                f"The model specifically recommends {fert_label}.",
+                "Check NPK ratio manually if possible."
+            ])
+            
+            # Format as markdown bullets
+            existing_crop_analysis = "\n".join([f"* {line}" for line in fallback_bullets])
 
     return {
         "prediction": pred_label,
         "probabilities": proba,
         "explanation": explanation,
         "shap_summary_url": f"/static_explanations/{os.path.basename(shap_path)}" if os.path.exists(shap_path) else None,
-        "lime_examples": lime_examples
+        "lime_examples": lime_examples,
+        "existing_crop_analysis": existing_crop_analysis
     }
+
+@app.get("/supported-crops")
+def get_supported_crops():
+    try:
+        if CROP_LE is None:
+             # Fallback if model not loaded yet (though startup event should handle it)
+             return {"crops": []}
+        return {"crops": CROP_LE.classes_.tolist()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")
 def health():

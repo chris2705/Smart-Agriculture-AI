@@ -8,16 +8,22 @@ import { AuthPage } from './pages/AuthPage';
 
 import { Dashboard } from './pages/Dashboard';
 
+import { FieldDetails } from './pages/FieldDetails';
+import { FloatingChatButton } from './components/FloatingChatButton';
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<AuthPage />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/field/:id" element={<FieldDetails />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/login" element={<AuthPage />} />
         </Routes>
+        <FloatingChatButton />
       </Router>
     </AuthProvider>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Chatbot } from '../components/Chatbot';
 import { ArrowLeft, Sprout } from 'lucide-react';
@@ -9,7 +9,21 @@ import { PlantBackground } from '../components/PlantBackground';
 export const ChatPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const result = location.state?.result;
+    const [result, setResult] = useState(location.state?.result || null);
+
+    // Load latest analysis from sessionStorage if not passed via state
+    useEffect(() => {
+        if (!result) {
+            const stored = sessionStorage.getItem('latestAnalysis');
+            if (stored) {
+                try {
+                    setResult(JSON.parse(stored));
+                } catch (e) {
+                    console.error("Failed to parse stored analysis", e);
+                }
+            }
+        }
+    }, [result]);
 
     return (
         <div className="min-h-screen relative overflow-hidden flex flex-col">

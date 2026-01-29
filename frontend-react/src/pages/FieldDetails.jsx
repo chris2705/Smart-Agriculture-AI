@@ -69,6 +69,9 @@ export const FieldDetails = () => {
             const response = await predict(features, (fieldData.crop_type && fieldData.crop_type !== "None") ? fieldData.crop_type : null);
             setAnalysisResult(response);
 
+            // Save to sessionStorage so chatbot can access it
+            sessionStorage.setItem('latestAnalysis', JSON.stringify(response));
+
             // Scroll to results
             setTimeout(() => {
                 document.getElementById('analysis-results')?.scrollIntoView({ behavior: 'smooth' });

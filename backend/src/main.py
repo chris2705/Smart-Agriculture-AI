@@ -42,7 +42,7 @@ app.add_middleware(
 
 # Config (will read from env)
 USE_FIREBASE = os.getenv("MODEL_STORAGE", "local") == "firebase"
-BUCKET_NAME = os.getenv("FIREBASE_BUCKET", "")
+BUCKET_NAME = os.getenv("FIREBASE_STORAGE_BUCKET", "")
 MODEL_REMOTE_PREFIX = os.getenv("MODEL_REMOTE_PREFIX", "models/")  # ends with slash
 
 # Local model folder (inside backend)
@@ -121,26 +121,30 @@ def download_blob_to(path_local: str, blob_path: str, bucket):
 
 def download_models_from_firebase():
     if not BUCKET_NAME:
-        raise RuntimeError("FIREBASE_BUCKET not set. Cannot download models.")
+        raise RuntimeError(
+            "FIREBASE_STORAGE_BUCKET is not set. "
+            "Did you export the env variable?"
+        )
+
     from google.cloud import storage
-    client = storage.Client()
+    client = storage.Client()  # uses GOOGLE_APPLICATION_CREDENTIALS
     bucket = client.bucket(BUCKET_NAME)
-    # download model files into MODEL_DIR / EXPL_DIR
+
     for key, filename in FILES.items():
-        # Build remote path (handle "../" for explanations)
-        remote_path = f"{MODEL_REMOTE_PREFIX}{filename}" if not filename.startswith("../") else f"{MODEL_REMOTE_PREFIX}{filename}"
+        remote_path = f"{MODEL_REMOTE_PREFIX}{filename}"
         remote_path = os.path.normpath(remote_path).replace(os.path.sep, "/")
+
         if filename.startswith("../"):
-            # explanation files: move up from models/ -> explanations/
-            # remote_path like "models/../explanations/shap_summary.png" -> normalized -> "explanations/shap_summary.png"
             remote_path = remote_path.replace("models/../", "")
             local_target = os.path.join(EXPL_DIR, os.path.basename(filename))
         else:
             local_target = os.path.join(MODEL_DIR, os.path.basename(filename))
-        try:
-            download_blob_to(local_target, remote_path, bucket)
-        except Exception as e:
-            print(f"[backend] Warning: could not download {remote_path}: {e}")
+
+        if os.path.exists(local_target):
+            continue
+
+        download_blob_to(local_target, remote_path, bucket)
+
 
 def load_models_local():
     try:
@@ -156,15 +160,28 @@ def load_models_local():
 @app.on_event("startup")
 def startup_event():
     global CROP_MODEL, FERT_MODEL, SCALER, CROP_LE, FERT_LE
+
     if USE_FIREBASE:
         print("[backend] Downloading models from Firebase Storage...")
         download_models_from_firebase()
+
     print("[backend] Loading models from disk...")
     CROP_MODEL, FERT_MODEL, SCALER, CROP_LE, FERT_LE = load_models_local()
+
+    if not all([CROP_MODEL, FERT_MODEL, SCALER, CROP_LE, FERT_LE]):
+        raise RuntimeError("One or more ML models failed to load")
+
     print("[backend] Models loaded successfully.")
 
-# Serve explanations as static files so frontend can fetch them
-app.mount("/static_explanations", StaticFiles(directory=EXPL_DIR), name="explanations")
+
+# ✅ ADD THIS
+app.mount(
+    "/explanations",
+    StaticFiles(directory=EXPL_DIR),
+    name="explanations"
+)
+
+
 
 @app.post("/predict")
 async def predict(payload: Features):
@@ -284,7 +301,7 @@ async def predict(payload: Features):
         "prediction": pred_label,
         "probabilities": proba,
         "explanation": explanation,
-        "shap_summary_url": f"/static_explanations/{os.path.basename(shap_path)}" if os.path.exists(shap_path) else None,
+        "shap_summary_url": f"/explanations/{os.path.basename(shap_path)}" if os.path.exists(shap_path) else None,
         "lime_examples": lime_examples,
         "existing_crop_analysis": existing_crop_analysis
     }

@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 import google.generativeai as genai
 
-load_dotenv()
+load_dotenv(override=True)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -127,6 +127,14 @@ def download_models_from_firebase():
         )
 
     from google.cloud import storage
+
+    # Resolve credentials path relative to the backend directory if it's a relative path
+    creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+    if creds_path and not os.path.isabs(creds_path):
+        backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        creds_path = os.path.join(backend_dir, creds_path)
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+
     client = storage.Client()  # uses GOOGLE_APPLICATION_CREDENTIALS
     bucket = client.bucket(BUCKET_NAME)
 

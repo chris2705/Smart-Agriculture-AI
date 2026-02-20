@@ -1,30 +1,50 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Sparkles, Mic, MicOff, Volume2, VolumeX, Languages } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Mic, MicOff, Volume2, VolumeX, Languages, Leaf } from 'lucide-react';
 import { chat } from '../api/client';
-import { cn } from '../lib/utils';
+
+const SUGGESTIONS = [
+    "Why was this crop recommended?",
+    "How should I apply the fertilizer?",
+    "What's the best watering schedule?",
+    "How can I improve soil pH?",
+];
+
+const TypingDots = () => (
+    <div className="flex items-center gap-1.5 px-1 py-1">
+        {[0, 1, 2].map(i => (
+            <motion.span
+                key={i}
+                className="w-2 h-2 rounded-full"
+                style={{ background: '#52b788' }}
+                animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+            />
+        ))}
+    </div>
+);
 
 export const Chatbot = ({ context, fullScreen = false }) => {
     const [messages, setMessages] = useState([
-        { id: 1, text: "Hello! I'm your farming assistant. Once you get a recommendation, I can explain it further.", sender: 'bot' }
+        { id: 1, text: "Hello! 🌱 I'm your AI farming assistant. Get a soil analysis first, then ask me anything about your crops, fertilizers, or soil health!", sender: 'bot' }
     ]);
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
     const hasShownWelcome = useRef(false);
+    const inputRef = useRef(null);
 
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
-
-    // Voice State
     const [isListening, setIsListening] = useState(false);
     const [isSpeakingEnabled, setIsSpeakingEnabled] = useState(false);
-    const [language, setLanguage] = useState('en-US'); // 'en-US' or 'ml-IN'
+    const [language, setLanguage] = useState('en-US');
 
     const recognitionRef = useRef(null);
     const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isTyping]);
 
     useEffect(() => {
         if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
@@ -32,244 +52,330 @@ export const Chatbot = ({ context, fullScreen = false }) => {
             recognitionRef.current = new SpeechRecognition();
             recognitionRef.current.continuous = false;
             recognitionRef.current.interimResults = false;
-
-            recognitionRef.current.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                setInput(prev => (prev ? prev + ' ' : '') + transcript);
+            recognitionRef.current.onresult = (e) => {
+                setInput(prev => (prev ? prev + ' ' : '') + e.results[0][0].transcript);
                 setIsListening(false);
             };
-
-            recognitionRef.current.onerror = (event) => {
-                console.error('Speech recognition error', event.error);
-                setIsListening(false);
-            };
-
-            recognitionRef.current.onend = () => {
-                setIsListening(false);
-            };
+            recognitionRef.current.onerror = () => setIsListening(false);
+            recognitionRef.current.onend = () => setIsListening(false);
         }
-
-        return () => {
-            if (synthRef.current) {
-                synthRef.current.cancel();
-            }
-        };
+        return () => synthRef.current?.cancel();
     }, []);
 
     const toggleListening = () => {
-        if (!recognitionRef.current) {
-            alert("Speech recognition is not supported in this browser.");
-            return;
-        }
-        if (isListening) {
-            recognitionRef.current.stop();
-        } else {
-            recognitionRef.current.lang = language; // Set language dynamically
-            recognitionRef.current.start();
-            setIsListening(true);
-        }
+        if (!recognitionRef.current) return alert("Speech recognition not supported.");
+        if (isListening) { recognitionRef.current.stop(); }
+        else { recognitionRef.current.lang = language; recognitionRef.current.start(); setIsListening(true); }
     };
 
     const speak = (text) => {
         if (!isSpeakingEnabled || !synthRef.current) return;
-
         synthRef.current.cancel();
-        // Simple cleanup for better speech
-        const cleanText = text.replace(/[*_#`]/g, '');
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-
-        // Try to set language
+        const utterance = new SpeechSynthesisUtterance(text.replace(/[*_#`]/g, ''));
         utterance.lang = language;
-
-        // Optional: Try to find a specific voice for the language
         const voices = synthRef.current.getVoices();
-        console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
-
-        // Try multiple matching strategies for Malayalam
-        let voice = null;
-        if (language === 'ml-IN') {
-            // Try exact match first
-            voice = voices.find(v => v.lang === 'ml-IN');
-            // Try Malayalam variants
-            if (!voice) voice = voices.find(v => v.lang.startsWith('ml'));
-            // Try by name containing Malayalam/Indian
-            if (!voice) voice = voices.find(v =>
-                v.name.toLowerCase().includes('malayalam') ||
-                v.name.toLowerCase().includes('indian')
-            );
-            // Try any Indian English voice as fallback
-            if (!voice) voice = voices.find(v => v.lang === 'en-IN');
-
-            if (!voice) {
-                console.warn('No Malayalam voice found. Using default voice. Consider installing Malayalam language pack in Windows Settings > Time & Language > Language.');
-            } else {
-                console.log('Using voice:', voice.name, voice.lang);
-            }
-        } else {
-            // For English, try to find en-US or en-GB
-            voice = voices.find(v => v.lang === language) ||
-                voices.find(v => v.lang.startsWith('en'));
-        }
-
-        if (voice) {
-            utterance.voice = voice;
-        }
-
+        const voice = voices.find(v => v.lang === language) || voices.find(v => v.lang.startsWith(language.split('-')[0]));
+        if (voice) utterance.voice = voice;
         synthRef.current.speak(utterance);
     };
 
     useEffect(() => {
         if (context?.prediction && !hasShownWelcome.current) {
             hasShownWelcome.current = true;
-            setMessages(prev => [
-                ...prev,
-                { id: Date.now(), text: `I see you got a recommendation for **${context.prediction}**. Feel free to ask me why, or about fertilizer usage!`, sender: 'bot' }
-            ]);
+            setMessages(prev => [...prev, {
+                id: Date.now(),
+                text: `🌾 I can see your analysis recommends **${context.prediction}**. Ask me why, about fertilizer usage, watering schedules, or anything else!`,
+                sender: 'bot'
+            }]);
         }
     }, [context]);
 
-    const handleSend = async (e) => {
-        e.preventDefault();
-        if (!input.trim()) return;
+    const handleSend = async (e, overrideText) => {
+        e?.preventDefault();
+        const text = overrideText || input;
+        if (!text.trim() || isTyping) return;
 
-        const userMsg = { id: Date.now(), text: input, sender: 'user' };
+        const userMsg = { id: Date.now(), text, sender: 'user' };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
         setIsTyping(true);
 
-        // Pass language context if not English
-        const contextWithLang = { ...context, language: language };
-        const response = await chat(input, contextWithLang);
-
-        setIsTyping(false);
-        const botMsg = { id: Date.now() + 1, text: response.response, sender: 'bot' };
-        setMessages(prev => [...prev, botMsg]);
-        speak(response.response);
+        try {
+            const response = await chat(text, { ...context, language });
+            const botMsg = { id: Date.now() + 1, text: response.response, sender: 'bot' };
+            setMessages(prev => [...prev, botMsg]);
+            speak(response.response);
+        } catch (err) {
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: "Sorry, I couldn't reach the server. Please try again.", sender: 'bot' }]);
+        } finally {
+            setIsTyping(false);
+        }
+        inputRef.current?.focus();
     };
 
+    const showSuggestions = messages.length <= 2;
+
     return (
-        <div className={cn(
-            "flex flex-col bg-white overflow-hidden",
-            fullScreen ? "h-full md:rounded-3xl md:shadow-xl md:border md:border-zinc-100" : "h-[600px] rounded-3xl shadow-xl border border-zinc-100 sticky top-8"
-        )}>
-            {/* Header */}
-            <div className="bg-nature-600 p-4 flex items-center justify-between">
+        <div className="flex flex-col h-full overflow-hidden" style={{ background: 'transparent' }}>
+            {/* ── HEADER ── */}
+            <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+                style={{
+                    background: 'linear-gradient(135deg, rgba(29,74,41,0.95), rgba(45,106,79,0.9))',
+                    borderBottom: '1px solid rgba(82,183,136,0.2)',
+                    backdropFilter: 'blur(10px)'
+                }}>
                 <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-full">
-                        <Bot className="text-white w-6 h-6" />
+                    {/* Bot avatar */}
+                    <div className="relative w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, rgba(82,183,136,0.3), rgba(52,168,83,0.2))', border: '1px solid rgba(82,183,136,0.4)' }}>
+                        <Bot className="w-5 h-5 text-green-300" />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2"
+                            style={{ borderColor: '#1d4a29' }}>
+                            <span className="absolute inset-0 rounded-full bg-green-300 animate-ping opacity-60" />
+                        </span>
                     </div>
                     <div>
-                        <h3 className="text-white font-semibold">Farming Assistant</h3>
-                        <p className="text-nature-100 text-xs flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" /> AI Powered
+                        <h3 className="text-white font-bold text-sm leading-tight">Farming Assistant</h3>
+                        <p className="text-xs flex items-center gap-1" style={{ color: 'rgba(149,213,178,0.8)' }}>
+                            <Sparkles className="w-3 h-3" />
+                            Powered by Gemini AI
                         </p>
                     </div>
                 </div>
+
+                {/* Controls */}
                 <div className="flex items-center gap-2">
-                    <button
+                    {/* Language toggle */}
+                    <motion.button
+                        whileHover={{ scale: 1.06 }}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => setLanguage(l => l === 'en-US' ? 'ml-IN' : 'en-US')}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-white/10 rounded-lg hover:bg-white/20 text-white text-xs font-medium transition-colors border border-white/10"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                        style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            color: 'rgba(200,240,210,0.9)'
+                        }}
                         title="Switch Language"
                     >
                         <Languages className="w-3.5 h-3.5" />
-                        <span>{language === 'en-US' ? 'EN' : 'MAL'}</span>
-                    </button>
-                    <button
+                        {language === 'en-US' ? 'EN' : 'MAL'}
+                    </motion.button>
+
+                    {/* TTS toggle */}
+                    <motion.button
+                        whileHover={{ scale: 1.06 }}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => setIsSpeakingEnabled(!isSpeakingEnabled)}
-                        className={cn(
-                            "p-2 rounded-lg transition-all text-white",
-                            isSpeakingEnabled ? "bg-white/20 shadow-inner ring-1 ring-white/30" : "hover:bg-white/10"
-                        )}
-                        title={isSpeakingEnabled ? "Disable Text-to-Speech" : "Enable Text-to-Speech"}
+                        className="p-2 rounded-xl transition-all"
+                        style={{
+                            background: isSpeakingEnabled ? 'rgba(82,183,136,0.3)' : 'rgba(255,255,255,0.08)',
+                            border: `1px solid ${isSpeakingEnabled ? 'rgba(82,183,136,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                            color: isSpeakingEnabled ? '#95d5b2' : 'rgba(200,240,210,0.5)'
+                        }}
+                        title={isSpeakingEnabled ? "Disable TTS" : "Enable TTS"}
                     >
-                        {isSpeakingEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5 opacity-70" />}
-                    </button>
+                        {isSpeakingEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                    </motion.button>
                 </div>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-50/50">
-                {messages.map((msg) => (
-                    <motion.div
-                        key={msg.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={cn(
-                            "flex gap-3 max-w-[85%]",
-                            msg.sender === 'user' ? "ml-auto flex-row-reverse" : ""
-                        )}
-                    >
-                        <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                            msg.sender === 'user' ? "bg-zinc-200" : "bg-nature-100"
-                        )}>
-                            {msg.sender === 'user' ? <User className="w-5 h-5 text-zinc-600" /> : <Bot className="w-5 h-5 text-nature-600" />}
-                        </div>
+            {/* ── MESSAGES ── */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
+                style={{
+                    background: 'linear-gradient(180deg, rgba(7,26,10,0.6) 0%, rgba(10,32,14,0.5) 100%)',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: '#2d6a4f transparent'
+                }}>
 
-                        <div className={cn(
-                            "p-3 rounded-2xl text-sm leading-relaxed",
-                            msg.sender === 'user'
-                                ? "bg-zinc-800 text-white rounded-tr-none"
-                                : "bg-white border border-zinc-200 text-zinc-700 rounded-tl-none shadow-sm"
-                        )}>
-                            <ReactMarkdown className="prose prose-sm max-w-none dark:prose-invert">
-                                {msg.text}
-                            </ReactMarkdown>
-                        </div>
-                    </motion.div>
-                ))}
-                {isTyping && (
-                    <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-nature-100 flex items-center justify-center">
-                            <Bot className="w-5 h-5 text-nature-600" />
-                        </div>
-                        <div className="bg-white border border-zinc-200 p-3 rounded-2xl rounded-tl-none shadow-sm">
-                            <div className="flex gap-1">
-                                <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" />
-                                <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce delay-100" />
-                                <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce delay-200" />
+                <AnimatePresence initial={false}>
+                    {messages.map(msg => (
+                        <motion.div
+                            key={msg.id}
+                            initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                            className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+                        >
+                            {/* Avatar */}
+                            <div className={`w-8 h-8 rounded-2xl flex items-center justify-center flex-shrink-0 ${msg.sender === 'user' ? '' : ''}`}
+                                style={msg.sender === 'user'
+                                    ? { background: 'linear-gradient(135deg, #1b4332, #2d6a4f)', border: '1px solid rgba(82,183,136,0.3)' }
+                                    : { background: 'rgba(52,168,83,0.15)', border: '1px solid rgba(82,183,136,0.25)' }
+                                }>
+                                {msg.sender === 'user'
+                                    ? <User className="w-4 h-4 text-green-300" />
+                                    : <Leaf className="w-4 h-4 text-green-400" />
+                                }
                             </div>
-                        </div>
-                    </div>
-                )}
+
+                            {/* Bubble */}
+                            <div className={`max-w-[78%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
+                                style={msg.sender === 'user'
+                                    ? {
+                                        background: 'linear-gradient(135deg, #1b4332, #2d6a4f)',
+                                        color: 'rgba(220,255,230,0.95)',
+                                        border: '1px solid rgba(82,183,136,0.25)',
+                                        boxShadow: '0 4px 16px rgba(0,0,0,0.25)'
+                                    }
+                                    : {
+                                        background: 'rgba(255,255,255,0.06)',
+                                        color: 'rgba(200,240,215,0.9)',
+                                        border: '1px solid rgba(255,255,255,0.09)',
+                                        boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
+                                    }
+                                }
+                            >
+                                <ReactMarkdown
+                                    className="prose prose-sm max-w-none"
+                                    components={{
+                                        p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                                        strong: ({ children }) => <strong style={{ color: '#95d5b2', fontWeight: 700 }}>{children}</strong>,
+                                        ul: ({ children }) => <ul className="list-disc ml-4 space-y-1">{children}</ul>,
+                                        li: ({ children }) => <li style={{ color: 'rgba(200,240,215,0.85)' }}>{children}</li>,
+                                        code: ({ children }) => (
+                                            <code className="px-1.5 py-0.5 rounded text-xs font-mono"
+                                                style={{ background: 'rgba(82,183,136,0.15)', color: '#95d5b2' }}>
+                                                {children}
+                                            </code>
+                                        ),
+                                    }}
+                                >
+                                    {msg.text}
+                                </ReactMarkdown>
+                            </div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+
+                {/* Typing indicator */}
+                <AnimatePresence>
+                    {isTyping && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="flex gap-3"
+                        >
+                            <div className="w-8 h-8 rounded-2xl flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'rgba(52,168,83,0.15)', border: '1px solid rgba(82,183,136,0.25)' }}>
+                                <Leaf className="w-4 h-4 text-green-400" />
+                            </div>
+                            <div className="px-4 py-3 rounded-2xl rounded-tl-sm"
+                                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                                <TypingDots />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Quick suggestions */}
+                <AnimatePresence>
+                    {showSuggestions && !isTyping && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="pt-2"
+                        >
+                            <p className="text-xs mb-3 ml-11" style={{ color: 'rgba(149,213,178,0.5)' }}>
+                                💡 Try asking:
+                            </p>
+                            <div className="flex flex-wrap gap-2 ml-11">
+                                {SUGGESTIONS.map((s, i) => (
+                                    <motion.button
+                                        key={i}
+                                        whileHover={{ scale: 1.03 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        onClick={() => handleSend(null, s)}
+                                        className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                                        style={{
+                                            background: 'rgba(52,168,83,0.1)',
+                                            border: '1px solid rgba(82,183,136,0.25)',
+                                            color: '#95d5b2'
+                                        }}
+                                    >
+                                        {s}
+                                    </motion.button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
-            <form onSubmit={handleSend} className="p-4 bg-white border-t border-zinc-100">
-                <div className="relative flex gap-2">
-                    <div className="relative flex-1">
+            {/* ── INPUT BAR ── */}
+            <form
+                onSubmit={handleSend}
+                className="flex-shrink-0 px-4 py-4"
+                style={{
+                    background: 'rgba(7,26,10,0.9)',
+                    backdropFilter: 'blur(16px)',
+                    borderTop: '1px solid rgba(82,183,136,0.12)'
+                }}
+            >
+                <div className="flex gap-2 items-center">
+                    {/* Mic button */}
+                    <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.92 }}
+                        onClick={toggleListening}
+                        className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all"
+                        style={isListening
+                            ? { background: 'rgba(255,80,80,0.2)', border: '1px solid rgba(255,80,80,0.4)', color: '#fca5a5' }
+                            : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(200,240,210,0.5)' }
+                        }
+                        title="Voice Input"
+                    >
+                        {isListening
+                            ? <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
+                                <MicOff className="w-4 h-4" />
+                            </motion.div>
+                            : <Mic className="w-4 h-4" />
+                        }
+                    </motion.button>
+
+                    {/* Text input */}
+                    <div className="flex-1 relative">
                         <input
+                            ref={inputRef}
                             type="text"
                             value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder={isListening ? "Listening..." : "Ask about crops, fertilizers..."}
-                            className={cn(
-                                "w-full pl-4 pr-12 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-nature-500/20 focus:border-nature-500 outline-none transition-all",
-                                isListening && "ring-2 ring-nature-500/20 border-nature-500 bg-nature-50/50"
-                            )}
+                            onChange={e => setInput(e.target.value)}
+                            placeholder={isListening ? "🎙 Listening..." : "Ask about crops, fertilizers, soil..."}
+                            className="w-full px-4 py-3 rounded-2xl text-sm outline-none transition-all"
+                            style={{
+                                background: isListening ? 'rgba(52,168,83,0.1)' : 'rgba(255,255,255,0.06)',
+                                border: `1px solid ${isListening ? 'rgba(82,183,136,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                                color: 'rgba(220,255,230,0.9)',
+                                caretColor: '#52b788'
+                            }}
                         />
-                        <button
-                            type="button"
-                            onClick={toggleListening}
-                            className={cn(
-                                "absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-colors",
-                                isListening
-                                    ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                                    : "text-zinc-500 hover:bg-zinc-100"
-                            )}
-                            title="Toggle Voice Input"
-                        >
-                            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                        </button>
                     </div>
-                    <button
+
+                    {/* Send button */}
+                    <motion.button
                         type="submit"
                         disabled={!input.trim() || isTyping}
-                        className="p-3 bg-nature-600 text-white rounded-xl hover:bg-nature-700 disabled:opacity-50 disabled:hover:bg-nature-600 transition-colors shrink-0"
+                        whileHover={input.trim() && !isTyping ? { scale: 1.08 } : {}}
+                        whileTap={input.trim() && !isTyping ? { scale: 0.92 } : {}}
+                        className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all"
+                        style={{
+                            background: input.trim() && !isTyping
+                                ? 'linear-gradient(135deg, #2d6a4f, #52b788)'
+                                : 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${input.trim() && !isTyping ? 'rgba(82,183,136,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                            color: input.trim() && !isTyping ? 'white' : 'rgba(200,240,210,0.25)',
+                            boxShadow: input.trim() && !isTyping ? '0 4px 16px rgba(45,106,79,0.35)' : 'none',
+                            cursor: !input.trim() || isTyping ? 'not-allowed' : 'pointer'
+                        }}
                     >
-                        <Send className="w-5 h-5" />
-                    </button>
+                        <Send className="w-4 h-4" />
+                    </motion.button>
                 </div>
             </form>
         </div>

@@ -1,78 +1,196 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Chatbot } from '../components/Chatbot';
-import { ArrowLeft, Sprout } from 'lucide-react';
+import { ArrowLeft, Sprout, Wheat, Droplets, Thermometer } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { cn } from '../lib/utils';
-import { PlantBackground } from '../components/PlantBackground';
 
 export const ChatPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [result, setResult] = useState(location.state?.result || null);
 
-    // Load latest analysis from sessionStorage if not passed via state
     useEffect(() => {
         if (!result) {
             const stored = sessionStorage.getItem('latestAnalysis');
             if (stored) {
-                try {
-                    setResult(JSON.parse(stored));
-                } catch (e) {
-                    console.error("Failed to parse stored analysis", e);
-                }
+                try { setResult(JSON.parse(stored)); } catch (e) { }
             }
         }
-    }, [result]);
+    }, []);
+
+    // Context summary cards derived from result
+    const ctxCards = result ? [
+        { icon: '🌱', label: 'Recommended Crop', val: result.prediction || '—' },
+        { icon: '🧪', label: 'Fertilizer', val: result.explanation?.fertilizer_recommendation || '—' },
+    ] : [];
 
     return (
-        <div className="min-h-screen relative overflow-hidden flex flex-col">
-            {/* Full-screen plant background - Clearer/Less Blurred */}
-            <PlantBackground opacity={0.3} />
+        <div className="min-h-screen flex flex-col relative overflow-hidden">
+            {/* Background */}
+            <div className="fixed inset-0 -z-20"
+                style={{ background: 'linear-gradient(160deg, #071a0a 0%, #0f2a0f 50%, #081810 100%)' }} />
+            {/* Subtle farm image */}
+            <div className="fixed inset-0 -z-10 opacity-[0.07]"
+                style={{
+                    backgroundImage: `url('https://images.unsplash.com/photo-1416879595882-3373a0480b5b?q=80&w=2070&auto=format&fit=crop')`,
+                    backgroundSize: 'cover', backgroundPosition: 'center'
+                }} />
+            {/* Green radial glow at top */}
+            <div className="fixed top-0 inset-x-0 h-64 -z-10 pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse 80% 100% at 50% 0%, rgba(52,168,83,0.12) 0%, transparent 100%)' }} />
 
-            {/* Header */}
-            <motion.div
-                initial={{ y: -20, opacity: 0 }}
+            {/* ── HEADER ── */}
+            <motion.header
+                initial={{ y: -70, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="bg-white/60 backdrop-blur-md border-b border-nature-200/50 p-4 shadow-sm sticky top-0 z-20 flex items-center justify-between"
+                transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="flex-shrink-0 px-4 sm:px-8 py-4 flex items-center gap-4 z-30"
+                style={{
+                    background: 'rgba(7,26,10,0.88)',
+                    backdropFilter: 'blur(20px)',
+                    borderBottom: '1px solid rgba(82,183,136,0.1)'
+                }}
             >
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="p-2 hover:bg-nature-100 rounded-full transition-colors group"
-                    >
-                        <ArrowLeft className="w-6 h-6 text-zinc-600 group-hover:text-nature-700" />
-                    </button>
-                    <div>
-                        <h1 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
-                            <div className="bg-nature-100 p-1.5 rounded-full">
-                                <Sprout className="w-5 h-5 text-nature-600" />
-                            </div>
-                            Farming Assistant
-                        </h1>
-                        <p className="text-xs text-zinc-600 font-medium ml-1">AI-powered crop & soil expert</p>
+                {/* Back */}
+                <motion.button
+                    whileHover={{ scale: 1.08, x: -3 }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => navigate(-1)}
+                    className="p-2.5 rounded-2xl transition-all flex-shrink-0"
+                    style={{
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.1)'
+                    }}
+                >
+                    <ArrowLeft className="w-5 h-5 text-green-300" />
+                </motion.button>
+
+                {/* Title */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center relative flex-shrink-0"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(45,106,79,0.5), rgba(82,183,136,0.25))',
+                            border: '1px solid rgba(82,183,136,0.35)'
+                        }}>
+                        <Sprout className="w-5 h-5 text-green-300" />
+                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2"
+                            style={{ borderColor: '#071a0a' }}>
+                            <span className="absolute inset-0 rounded-full bg-green-300 animate-ping opacity-60" />
+                        </span>
+                    </div>
+                    <div className="min-w-0">
+                        <h1 className="text-base font-bold text-white leading-tight truncate">Farming Assistant</h1>
+                        <p className="text-xs truncate" style={{ color: 'rgba(149,213,178,0.6)' }}>
+                            AI-powered crop & soil expert
+                        </p>
                     </div>
                 </div>
-            </motion.div>
 
-            {/* Main Chat Area */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="flex-1 p-0 md:p-6 max-w-5xl mx-auto w-full h-[calc(100vh-73px)] relative z-10"
-            >
-                <div className={cn(
-                    "h-full w-full md:rounded-3xl overflow-hidden shadow-2xl shadow-nature-900/10",
-                    "bg-white/70 backdrop-blur-md border border-white/40",
-                    "flex flex-col relative"
-                )}>
-                    {/* Inner texture/gradient for chat area specifically */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-nature-50/50 to-white/30 pointer-events-none" />
+                {/* Context badges */}
+                {ctxCards.length > 0 && (
+                    <div className="hidden md:flex items-center gap-2">
+                        {ctxCards.map((c, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3 + i * 0.1 }}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium"
+                                style={{
+                                    background: 'rgba(52,168,83,0.12)',
+                                    border: '1px solid rgba(82,183,136,0.25)',
+                                    color: '#95d5b2'
+                                }}
+                            >
+                                <span>{c.icon}</span>
+                                <span className="text-white/40 text-[10px] uppercase">{c.label}:</span>
+                                <span className="font-bold text-green-300 truncate max-w-[120px]">{c.val}</span>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </motion.header>
 
-                    <Chatbot context={result} fullScreen={true} />
-                </div>
-            </motion.div>
+            {/* ── MAIN CHAT LAYOUT ── */}
+            <div className="flex-1 flex overflow-hidden">
+                {/* Left: decorative agri panel (desktop only) */}
+                <motion.aside
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                    className="hidden xl:flex w-72 flex-shrink-0 flex-col gap-4 p-6"
+                    style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}
+                >
+                    {/* Mini farm image */}
+                    <div className="rounded-3xl overflow-hidden h-44 relative">
+                        <div className="absolute inset-0 bg-cover bg-center"
+                            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1625246333195-584050799335?q=80&w=600&auto=format&fit=crop')` }} />
+                        <div className="absolute inset-0"
+                            style={{ background: 'linear-gradient(180deg, transparent 30%, rgba(7,26,10,0.95) 100%)' }} />
+                        <div className="absolute bottom-0 p-4">
+                            <p className="text-white font-bold text-sm">Your Smart Farm</p>
+                            <p className="text-xs" style={{ color: 'rgba(149,213,178,0.7)' }}>AI-powered insights</p>
+                        </div>
+                    </div>
+
+                    {/* Context summary */}
+                    {result && (
+                        <div className="rounded-3xl p-4 space-y-3"
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(149,213,178,0.5)' }}>
+                                Analysis Context
+                            </p>
+                            <div className="space-y-2">
+                                {ctxCards.map((c, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                        <span className="text-base">{c.icon}</span>
+                                        <div>
+                                            <p className="text-[10px] uppercase" style={{ color: 'rgba(149,213,178,0.45)' }}>{c.label}</p>
+                                            <p className="text-sm font-semibold text-green-300 truncate">{c.val}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tips */}
+                    <div className="rounded-3xl p-4"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'rgba(149,213,178,0.5)' }}>
+                            🌿 Tips
+                        </p>
+                        <div className="space-y-2 text-xs" style={{ color: 'rgba(200,240,210,0.55)' }}>
+                            <p>• Ask about fertilizer schedules</p>
+                            <p>• Ask about pest control for your crop</p>
+                            <p>• Ask about soil improvement tips</p>
+                            <p>• Ask to explain the AI recommendation</p>
+                        </div>
+                    </div>
+                </motion.aside>
+
+                {/* Chat panel */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    className="flex-1 flex flex-col p-0 sm:p-4 lg:p-6 overflow-hidden"
+                >
+                    <div className="h-full w-full rounded-none sm:rounded-3xl overflow-hidden flex flex-col relative"
+                        style={{
+                            background: 'rgba(10,30,14,0.7)',
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(82,183,136,0.1)',
+                            boxShadow: '0 8px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)'
+                        }}
+                    >
+                        {/* Subtle top glow inside panel */}
+                        <div className="absolute top-0 left-0 right-0 h-32 pointer-events-none rounded-t-3xl"
+                            style={{ background: 'linear-gradient(180deg, rgba(52,168,83,0.06) 0%, transparent 100%)' }} />
+                        <Chatbot context={result} fullScreen={true} />
+                    </div>
+                </motion.div>
+            </div>
         </div>
     );
 };

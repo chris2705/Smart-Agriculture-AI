@@ -125,27 +125,27 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
             <form onSubmit={handleSubmit(handleDetailsSubmit)} className="space-y-6 mt-6">
                 <div>
                     <label className="block text-sm font-semibold text-zinc-700 mb-2">Field Name</label>
-                    <input {...register("name", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none" placeholder="e.g. North Acre" />
+                    <input {...register("name", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="e.g. North Acre" />
                 </div>
                 <div>
                     <label className="block text-sm font-semibold text-zinc-700 mb-2">Location</label>
                     <div className="relative">
                         <MapPin className="absolute left-3 top-3.5 w-5 h-5 text-zinc-400" />
-                        <input {...register("location", { required: true })} className="w-full pl-10 px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none" placeholder="GPS or Address" />
+                        <input {...register("location", { required: true })} className="w-full pl-10 px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="GPS or Address" />
                     </div>
                 </div>
                 <div>
                     <label className="block text-sm font-semibold text-zinc-700 mb-2">Size (Acres)</label>
                     <div className="relative">
                         <Ruler className="absolute left-3 top-3.5 w-5 h-5 text-zinc-400" />
-                        <input type="number" step="0.1" {...register("size", { required: true })} className="w-full pl-10 px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none" placeholder="0.0" />
+                        <input type="number" step="0.1" {...register("size", { required: true })} className="w-full pl-10 px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="0.0" />
                     </div>
                 </div>
 
                 {formData.hasCrop && (
                     <div>
                         <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Current Crop</label>
-                        <select {...register("selectedCrop", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white">
+                        <select {...register("selectedCrop", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white text-zinc-900">
                             <option value="">Select a crop...</option>
                             {loadingCrops ? <option disabled>Loading...</option> : supportedCrops.map(crop => (
                                 <option key={crop} value={crop}>{crop}</option>

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { Leaf, FlaskConical, Zap, Droplets, Thermometer, Activity, Sparkles } from 'lucide-react';
+import { Leaf, FlaskConical, Zap, Droplets, Thermometer, Activity, Sparkles, Radio } from 'lucide-react';
 
-const InputField = ({ label, name, register, icon: Icon, min, max, step, defaultValue, unit }) => {
+const InputField = ({ label, name, register, icon: Icon, min, max, step, defaultValue, unit, sensorValue }) => {
     const [isFocused, setIsFocused] = useState(false);
+    const hasSensorValue = sensorValue != null;
 
     return (
         <motion.div
@@ -17,10 +18,14 @@ const InputField = ({ label, name, register, icon: Icon, min, max, step, default
                 style={{
                     background: isFocused
                         ? 'rgba(52,168,83,0.12)'
-                        : 'rgba(255,255,255,0.05)',
+                        : hasSensorValue
+                            ? 'rgba(96,165,250,0.06)'
+                            : 'rgba(255,255,255,0.05)',
                     border: isFocused
                         ? '1px solid rgba(82,183,136,0.5)'
-                        : '1px solid rgba(255,255,255,0.09)',
+                        : hasSensorValue
+                            ? '1px solid rgba(96,165,250,0.2)'
+                            : '1px solid rgba(255,255,255,0.09)',
                     boxShadow: isFocused ? '0 0 20px rgba(52,168,83,0.15)' : 'none'
                 }}
             >
@@ -38,6 +43,12 @@ const InputField = ({ label, name, register, icon: Icon, min, max, step, default
                     <label className="block text-xs font-semibold uppercase tracking-wider mb-0.5 transition-colors duration-300"
                         style={{ color: isFocused ? '#95d5b2' : 'rgba(200,240,210,0.45)' }}>
                         {label} {unit && <span className="normal-case font-normal opacity-70">({unit})</span>}
+                        {hasSensorValue && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full normal-case font-bold"
+                                style={{ background: 'rgba(96,165,250,0.15)', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.3)' }}>
+                                <Radio className="w-2.5 h-2.5" /> SENSOR
+                            </span>
+                        )}
                     </label>
                     <input
                         type="number"
@@ -56,8 +67,31 @@ const InputField = ({ label, name, register, icon: Icon, min, max, step, default
     );
 };
 
-export const SoilForm = ({ onSubmit, isLoading }) => {
-    const { register, handleSubmit } = useForm();
+export const SoilForm = ({ onSubmit, isLoading, sensorData }) => {
+    const { register, handleSubmit, setValue, getValues } = useForm();
+    const [sensorLoaded, setSensorLoaded] = useState(false);
+
+    // Function to load sensor data into form fields
+    const loadSensorData = (data) => {
+        if (!data) return;
+        const fieldMap = ['nitrogen', 'phosphorus', 'potassium', 'pH', 'moisture', 'temperature'];
+        fieldMap.forEach((field) => {
+            if (data[field] != null) {
+                setValue(field, data[field], { shouldValidate: true });
+            }
+        });
+        setSensorLoaded(true);
+        // Auto-reset the indicator after 3 seconds
+        setTimeout(() => setSensorLoaded(false), 3000);
+    };
+
+    // Expose loadSensorData so parent components can call it
+    // (the SensorPanel "Load into Form" button does this)
+    useEffect(() => {
+        if (sensorData && sensorData._autoLoad) {
+            loadSensorData(sensorData);
+        }
+    }, [sensorData]);
 
     const fields = [
         { label: 'Nitrogen', name: 'nitrogen', icon: Leaf, defaultValue: 12, min: 0, unit: 'mg/kg' },
@@ -70,13 +104,35 @@ export const SoilForm = ({ onSubmit, isLoading }) => {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* Sensor loaded notification */}
+            {sensorLoaded && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: 'auto' }}
+                    exit={{ opacity: 0, y: -10, height: 0 }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium"
+                    style={{
+                        background: 'rgba(96,165,250,0.1)',
+                        border: '1px solid rgba(96,165,250,0.25)',
+                        color: '#93c5fd'
+                    }}
+                >
+                    <Radio className="w-4 h-4" />
+                    ✅ Sensor values loaded! You can edit them before submitting.
+                </motion.div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {fields.map((f, i) => (
                     <motion.div key={f.name}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.06 }}>
-                        <InputField {...f} register={register} />
+                        <InputField
+                            {...f}
+                            register={register}
+                            sensorValue={sensorData?.[f.name]}
+                        />
                     </motion.div>
                 ))}
             </div>

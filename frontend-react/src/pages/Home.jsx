@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SoilForm } from '../components/SoilForm';
 import { PredictionResult } from '../components/PredictionResult';
+import { SensorPanel } from '../components/SensorPanel';
+import { useSensorData } from '../hooks/useSensorData';
 import { predict } from '../api/client';
 import { Sprout, MessageCircle, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
@@ -36,6 +38,17 @@ export const Home = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const { user, logout } = useAuth();
+
+    // Sensor data — use 'default' sensor for the Home page quick analysis
+    const { sensorData, isConnected, lastUpdated, error: sensorError } = useSensorData('default');
+
+    // State for sensor data that should be loaded into the form
+    const [formSensorData, setFormSensorData] = useState(null);
+
+    const handleLoadSensorData = useCallback((data) => {
+        setFormSensorData({ ...data, _autoLoad: true });
+        setTimeout(() => setFormSensorData(prev => prev ? { ...prev, _autoLoad: false } : null), 100);
+    }, []);
 
     const handleSubmit = async (data) => {
         setLoading(true);
@@ -242,6 +255,15 @@ export const Home = () => {
 
                 {/* ─── SOIL FORM SECTION ─── */}
                 <div id="analyze">
+                    {/* Live Sensor Panel */}
+                    <SensorPanel
+                        sensorData={sensorData}
+                        isConnected={isConnected}
+                        lastUpdated={lastUpdated}
+                        error={sensorError}
+                        onLoadSensorData={handleLoadSensorData}
+                    />
+
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -267,9 +289,14 @@ export const Home = () => {
                                 </div>
                                 <p style={{ color: 'rgba(200,240,210,0.5)' }}>
                                     Enter your soil metrics to generate a precision crop recommendation report
+                                    {sensorData && <span className="ml-1 text-blue-300">— or load values from your connected sensor above! 📡</span>}
                                 </p>
                             </div>
-                            <SoilForm onSubmit={handleSubmit} isLoading={loading} />
+                            <SoilForm
+                                onSubmit={handleSubmit}
+                                isLoading={loading}
+                                sensorData={formSensorData || sensorData}
+                            />
                         </div>
                     </motion.div>
                 </div>

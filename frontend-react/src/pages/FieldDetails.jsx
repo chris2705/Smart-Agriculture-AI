@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sprout, MapPin, Ruler, Droplets, FlaskConical } from 'lucide-react';
 import { SoilForm } from '../components/SoilForm';
 import { PredictionResult } from '../components/PredictionResult';
+import { SensorPanel } from '../components/SensorPanel';
+import { useSensorData } from '../hooks/useSensorData';
 import { predict } from '../api/client';
 import axios from 'axios';
 
@@ -31,6 +33,21 @@ export const FieldDetails = () => {
     const [analysisResult, setAnalysisResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // Sensor data — use field id as sensor path (e.g., sensors/1, sensors/2)
+    // Falls back to 'default' if no field id
+    const sensorId = fieldData?.sensor_id || id || 'default';
+    const { sensorData, isConnected, lastUpdated, error: sensorError } = useSensorData(sensorId);
+
+    // State for sensor data that should be loaded into the form
+    const [formSensorData, setFormSensorData] = useState(null);
+
+    const handleLoadSensorData = useCallback((data) => {
+        // Add _autoLoad flag so SoilForm knows to auto-fill
+        setFormSensorData({ ...data, _autoLoad: true });
+        // Reset the flag after a tick so subsequent loads still trigger
+        setTimeout(() => setFormSensorData(prev => prev ? { ...prev, _autoLoad: false } : null), 100);
+    }, []);
 
     useEffect(() => {
         if (!fieldData && id) {
@@ -157,6 +174,15 @@ export const FieldDetails = () => {
 
             {/* Main content */}
             <div className="container mx-auto px-4 py-10 max-w-5xl relative z-10">
+                {/* Live Sensor Panel */}
+                <SensorPanel
+                    sensorData={sensorData}
+                    isConnected={isConnected}
+                    lastUpdated={lastUpdated}
+                    error={sensorError}
+                    onLoadSensorData={handleLoadSensorData}
+                />
+
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -181,8 +207,13 @@ export const FieldDetails = () => {
                         <p className="mb-8 text-sm" style={{ color: 'rgba(200,240,210,0.5)' }}>
                             Enter the latest soil metrics for <strong className="text-green-300">{fieldData.name}</strong> to get real-time
                             fertilizer recommendations and crop suitability scores.
+                            {sensorData && <span className="ml-1 text-blue-300">📡 Sensor data available — click "Load into Form" above!</span>}
                         </p>
-                        <SoilForm onSubmit={handleAnalysisSubmit} isLoading={loading} />
+                        <SoilForm
+                            onSubmit={handleAnalysisSubmit}
+                            isLoading={loading}
+                            sensorData={formSensorData || sensorData}
+                        />
                     </div>
                 </motion.div>
 

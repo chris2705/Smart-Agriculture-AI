@@ -35,6 +35,14 @@ export const useSensorData = (sensorId = 'default') => {
         setError(null);
 
         try {
+            if (!database) {
+                const msg = 'Realtime database not configured. Firebase disabled.';
+                console.warn('[useSensorData] ' + msg);
+                setError(msg);
+                setIsConnected(false);
+                return;
+            }
+
             // The ESP32 sensor writes to /sensorData (flat path).
             // For future multi-sensor support you could use /sensors/<sensorId>.
             const sensorRef = ref(database, 'sensorData');

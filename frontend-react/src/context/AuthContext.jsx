@@ -55,9 +55,11 @@ export const AuthProvider = ({ children }) => {
             return await login(email, password);
         } catch (error) {
             console.error("Registration failed:", error);
+            const serverMsg = error.response?.data?.detail || error.response?.data || null;
+            const message = serverMsg || error.message || "Registration failed. Try a different email.";
             return {
                 success: false,
-                message: error.response?.data?.detail || "Registration failed. Try a different email."
+                message,
             };
         }
     };

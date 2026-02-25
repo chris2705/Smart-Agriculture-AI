@@ -136,7 +136,7 @@ export const PredictionResult = ({ result }) => {
                         ) : (
                             <p className="text-blue-800/80 leading-relaxed text-lg">
                                 Based on your soil's unique profile, <span className="font-bold text-blue-900 underline decoration-blue-300 decoration-2 underline-offset-2">{result.prediction}</span> has been identified as the optimal crop choice.
-                                Our model analyzed the nutrient balance (N: {result.explanation.input_data?.nitrogen}, P: {result.explanation.input_data?.phosphorus}, K: {result.explanation.input_data?.potassium})
+                                Our model analyzed the nutrient balance (N: {result.explanation?.input_data?.nitrogen ?? '—'}, P: {result.explanation?.input_data?.phosphorus ?? '—'}, K: {result.explanation?.input_data?.potassium ?? '—'})
                                 to ensure maximum yield potential.
                             </p>
                         )}

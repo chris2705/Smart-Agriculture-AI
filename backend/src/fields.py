@@ -12,6 +12,7 @@ class FieldBase(BaseModel):
     location: str
     size: float
     crop_type: Optional[str] = None
+    soil_type: Optional[str] = None
 
 class FieldCreate(FieldBase):
     pass

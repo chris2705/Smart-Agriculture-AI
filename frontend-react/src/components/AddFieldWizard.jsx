@@ -45,7 +45,8 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
                 name: data.name,
                 location: data.location,
                 size: parseFloat(data.size),
-                crop_type: formData.hasCrop ? data.selectedCrop : "None"
+                crop_type: formData.hasCrop ? data.selectedCrop : "None",
+                soil_type: formData.hasCrop ? data.selectedSoilType : null
             };
 
             console.log("Sending field data:", newField);
@@ -107,19 +108,25 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
     const DetailsStep = () => {
         const { register, handleSubmit } = useForm({ defaultValues: formData });
         const [supportedCrops, setSupportedCrops] = useState([]);
+        const [supportedSoilTypes, setSupportedSoilTypes] = useState([]);
         const [loadingCrops, setLoadingCrops] = useState(false);
 
         React.useEffect(() => {
             if (formData.hasCrop) {
                 setLoadingCrops(true);
                 const BACKEND_URL = `http://${window.location.hostname}:8000`;
-                fetch(`${BACKEND_URL}/supported-crops`)
-                    .then(res => res.json())
-                    .then(data => setSupportedCrops(data.crops || []))
-                    .catch(e => console.error("Failed to fetch crops", e))
+                Promise.all([
+                    fetch(`${BACKEND_URL}/supported-fert-crops`).then(res => res.json()),
+                    fetch(`${BACKEND_URL}/supported-soil-types`).then(res => res.json())
+                ])
+                    .then(([fertData, soilData]) => {
+                        setSupportedCrops(fertData.crops || []);
+                        setSupportedSoilTypes(soilData.soil_types || []);
+                    })
+                    .catch(e => console.error("Failed to fetch crops/soil data", e))
                     .finally(() => setLoadingCrops(false));
             }
-        }, []);
+        }, [formData.hasCrop]);
 
         return (
             <form onSubmit={handleSubmit(handleDetailsSubmit)} className="space-y-6 mt-6">
@@ -143,14 +150,25 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
                 </div>
 
                 {formData.hasCrop && (
-                    <div>
-                        <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Current Crop</label>
-                        <select {...register("selectedCrop", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white text-zinc-900">
-                            <option value="">Select a crop...</option>
-                            {loadingCrops ? <option disabled>Loading...</option> : supportedCrops.map(crop => (
-                                <option key={crop} value={crop}>{crop}</option>
-                            ))}
-                        </select>
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Current Crop</label>
+                            <select {...register("selectedCrop", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white text-zinc-900">
+                                <option value="">Select a crop...</option>
+                                {loadingCrops ? <option disabled>Loading...</option> : supportedCrops.map(crop => (
+                                    <option key={crop} value={crop}>{crop}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Soil Type</label>
+                            <select {...register("selectedSoilType", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white text-zinc-900">
+                                <option value="">Select a soil type...</option>
+                                {loadingCrops ? <option disabled>Loading...</option> : supportedSoilTypes.map(soil => (
+                                    <option key={soil} value={soil}>{soil}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 )}
 

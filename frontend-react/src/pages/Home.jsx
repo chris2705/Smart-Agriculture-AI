@@ -4,7 +4,7 @@ import { SoilForm } from '../components/SoilForm';
 import { PredictionResult } from '../components/PredictionResult';
 import { SensorPanel } from '../components/SensorPanel';
 import { useSensorData } from '../hooks/useSensorData';
-import { predict } from '../api/client';
+import { predict, recommendFertilizer as predictFertilizer } from '../api/client';
 import { Sprout, MessageCircle, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -54,10 +54,23 @@ export const Home = () => {
         setLoading(true);
         setError(null);
         try {
-            const NPK_total = data.nitrogen + data.phosphorus + data.potassium;
-            const features = [data.nitrogen, data.phosphorus, data.potassium, data.pH, data.moisture, data.temperature, NPK_total];
-            const response = await predict(features);
-            setResult(response);
+            // Build fertilizer prediction payload
+            const payload = {
+                n: data.nitrogen,
+                p: data.phosphorus,
+                k: data.potassium,
+                temperature: data.temperature,
+                moisture: data.moisture,
+                crop_type: data.current_crop || '',
+                soil_type: data.soil_type || ''
+            };
+            const response = await predictFertilizer(payload);
+
+            // Backend returns { success: true, prediction: '<fertilizer-name>' }
+            setResult({
+                fertilizer_only: true,
+                fertilizer: response.prediction || response.predicted || null
+            });
             setTimeout(() => document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' }), 100);
         } catch (err) {
             setError(err.message);
@@ -321,18 +334,33 @@ export const Home = () => {
 
                 {/* Results */}
                 <div id="results">
-                    <AnimatePresence>
-                        {result && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 40 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-                            >
-                                <PredictionResult result={result} />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    <div id="results">
+                        <AnimatePresence>
+                            {result && result.fertilizer_only && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 40 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                                >
+                                    <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center">
+                                        <div className="text-lg font-semibold text-green-200">✅ Recommended Fertilizer: <span className="font-bold text-white">{result.fertilizer}</span></div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {result && !result.fertilizer_only && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 40 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                                >
+                                    <PredictionResult result={result} />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             </section>
 

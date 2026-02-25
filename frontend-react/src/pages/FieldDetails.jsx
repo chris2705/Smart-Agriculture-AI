@@ -6,7 +6,7 @@ import { SoilForm } from '../components/SoilForm';
 import { PredictionResult } from '../components/PredictionResult';
 import { SensorPanel } from '../components/SensorPanel';
 import { useSensorData } from '../hooks/useSensorData';
-import { predict } from '../api/client';
+import { predict, recommendFertilizer } from '../api/client';
 import axios from 'axios';
 
 const cropBannerImages = {
@@ -74,11 +74,39 @@ export const FieldDetails = () => {
         setLoading(true);
         setError(null);
         try {
-            const NPK_total = data.nitrogen + data.phosphorus + data.potassium;
-            const features = [data.nitrogen, data.phosphorus, data.potassium, data.pH, data.moisture, data.temperature, NPK_total];
-            const response = await predict(features, (fieldData.crop_type && fieldData.crop_type !== "None") ? fieldData.crop_type : null);
-            setAnalysisResult(response);
-            sessionStorage.setItem('latestAnalysis', JSON.stringify(response));
+            if (fieldData.crop_type && fieldData.crop_type !== "None") {
+                const payload = {
+                    n: data.nitrogen,
+                    p: data.phosphorus,
+                    k: data.potassium,
+                    temperature: data.temperature,
+                    moisture: data.moisture,
+                    crop_type: fieldData.crop_type,
+                    soil_type: fieldData.soil_type || data.soil_type
+                };
+
+                if (!payload.soil_type) {
+                    throw new Error("Soil Type is required for fertilizer recommendation.");
+                }
+
+                const response = await recommendFertilizer(payload);
+                const enrichedResult = {
+                    prediction: response.prediction,
+                    is_fertilizer_only: true,
+                    explanation: {
+                        fertilizer_recommendation: response.prediction,
+                        input_data: payload
+                    }
+                };
+                setAnalysisResult(enrichedResult);
+                sessionStorage.setItem('latestAnalysis', JSON.stringify(enrichedResult));
+            } else {
+                const NPK_total = data.nitrogen + data.phosphorus + data.potassium;
+                const features = [data.nitrogen, data.phosphorus, data.potassium, data.pH, data.moisture, data.temperature, NPK_total];
+                const response = await predict(features, null);
+                setAnalysisResult(response);
+                sessionStorage.setItem('latestAnalysis', JSON.stringify(response));
+            }
             setTimeout(() => document.getElementById('analysis-results')?.scrollIntoView({ behavior: 'smooth' }), 100);
         } catch (err) {
             setError(err.message);
@@ -213,6 +241,7 @@ export const FieldDetails = () => {
                             onSubmit={handleAnalysisSubmit}
                             isLoading={loading}
                             sensorData={formSensorData || sensorData}
+                            fieldData={fieldData}
                         />
                     </div>
                 </motion.div>

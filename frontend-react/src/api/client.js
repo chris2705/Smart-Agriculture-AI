@@ -73,3 +73,18 @@ export const chat = async (message, context) => {
         return { response: "Sorry, I'm having trouble connecting to the server right now." };
     }
 };
+
+export const recommendFertilizer = async (payload) => {
+    try {
+        const response = await axios.post(`${BACKEND_URL}/predict/fertilizer`, payload);
+        return response.data;
+    } catch (error) {
+        if (error.response) {
+            throw new Error(`Backend error [${error.response.status}]: ${JSON.stringify(error.response.data)}`);
+        } else if (error.request) {
+            throw new Error("No response from backend. Is it running?");
+        } else {
+            throw new Error(`Error: ${error.message}`);
+        }
+    }
+};

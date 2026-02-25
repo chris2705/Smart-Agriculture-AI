@@ -67,9 +67,24 @@ const InputField = ({ label, name, register, icon: Icon, min, max, step, default
     );
 };
 
-export const SoilForm = ({ onSubmit, isLoading, sensorData }) => {
+export const SoilForm = ({ onSubmit, isLoading, sensorData, fieldData }) => {
     const { register, handleSubmit, setValue, getValues } = useForm();
     const [sensorLoaded, setSensorLoaded] = useState(false);
+    const [fertCrops, setFertCrops] = useState([]);
+    const [soilTypes, setSoilTypes] = useState([]);
+
+    useEffect(() => {
+        // Fetch fertilizer-supported crops and soil types for dropdowns
+        const BACKEND_URL = `http://${window.location.hostname}:8000`;
+        fetch(`${BACKEND_URL}/supported-fert-crops`)
+            .then(r => r.json())
+            .then(d => setFertCrops(d.crops || []))
+            .catch(() => setFertCrops([]));
+        fetch(`${BACKEND_URL}/supported-soil-types`)
+            .then(r => r.json())
+            .then(d => setSoilTypes(d.soil_types || []))
+            .catch(() => setSoilTypes([]));
+    }, []);
 
     // Function to load sensor data into form fields
     const loadSensorData = (data) => {
@@ -136,6 +151,27 @@ export const SoilForm = ({ onSubmit, isLoading, sensorData }) => {
                     </motion.div>
                 ))}
             </div>
+
+            {/* Current crop & soil type selectors (used for fertilizer recommendation) */}
+            {(!fieldData || !fieldData.crop_type || fieldData.crop_type === "None") && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-semibold text-zinc-700 mb-2">Current Crop</label>
+                        <select {...register('current_crop')} className="w-full px-4 py-3 rounded-xl border border-zinc-200 outline-none bg-white text-zinc-900">
+                            <option value="">Select current crop (optional)</option>
+                            {fertCrops.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-zinc-700 mb-2">Soil Type</label>
+                        <select {...register('soil_type')} className="w-full px-4 py-3 rounded-xl border border-zinc-200 outline-none bg-white text-zinc-900">
+                            <option value="">Select soil type (optional)</option>
+                            {soilTypes.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                    </div>
+                </div>
+            )}
 
             <div className="flex justify-center pt-4">
                 <motion.button

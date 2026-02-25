@@ -21,6 +21,7 @@ class Field(Base):
     location = Column(String)
     size = Column(Float)
     crop_type = Column(String, nullable=True) # "None" or crop name
+    soil_type = Column(String, nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="fields")

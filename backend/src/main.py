@@ -223,6 +223,16 @@ def get_supported_crops():
     return {"crops": CROP_LE.classes_.tolist()}
 
 
+@app.get("/supported-fert-crops")
+def get_supported_fert_crops():
+    return {"crops": CROP_TYPE_LE.classes_.tolist()}
+
+
+@app.get("/supported-soil-types")
+def get_supported_soil_types():
+    return {"soil_types": SOIL_TYPE_LE.classes_.tolist()}
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}

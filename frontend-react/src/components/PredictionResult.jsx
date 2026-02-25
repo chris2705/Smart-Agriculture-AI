@@ -43,6 +43,27 @@ export const PredictionResult = ({ result }) => {
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5); // Top 5
 
+    if (result.is_fertilizer_only) {
+        return (
+            <div className="space-y-8 mt-16">
+                <div className="flex items-center gap-2 mb-6">
+                    <div className="h-1 w-12 bg-nature-500 rounded-full" />
+                    <h2 className="text-2xl font-bold text-zinc-800">Analysis Results</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <ResultCard
+                        title="Recommended Fertilizer"
+                        value={result.explanation?.fertilizer_recommendation || result.prediction}
+                        icon={TestTube}
+                        colorClass="bg-blue-600 text-blue-600"
+                        gradient="from-blue-400 to-indigo-400"
+                        delay={0.1}
+                    />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 mt-16">
             <div className="flex items-center gap-2 mb-6">

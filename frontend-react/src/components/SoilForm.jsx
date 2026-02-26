@@ -152,21 +152,13 @@ export const SoilForm = ({ onSubmit, isLoading, sensorData, fieldData }) => {
                 ))}
             </div>
 
-            {/* Current crop & soil type selectors (used for fertilizer recommendation) */}
-            {(!fieldData || !fieldData.crop_type || fieldData.crop_type === "None") && (
+            {/* Soil type selector (used for fertilizer recommendation when a crop is planted but soil type is unknown) */}
+            {fieldData && fieldData.crop_type && fieldData.crop_type !== "None" && !fieldData.soil_type && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-semibold text-zinc-700 mb-2">Current Crop</label>
-                        <select {...register('current_crop')} className="w-full px-4 py-3 rounded-xl border border-zinc-200 outline-none bg-white text-zinc-900">
-                            <option value="">Select current crop (optional)</option>
-                            {fertCrops.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                    </div>
-
-                    <div>
+                    <div className="sm:col-span-2 md:col-span-1">
                         <label className="block text-sm font-semibold text-zinc-700 mb-2">Soil Type</label>
                         <select {...register('soil_type')} className="w-full px-4 py-3 rounded-xl border border-zinc-200 outline-none bg-white text-zinc-900">
-                            <option value="">Select soil type (optional)</option>
+                            <option value="">Select soil type (required for fertilizer)</option>
                             {soilTypes.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                     </div>

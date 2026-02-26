@@ -60,6 +60,29 @@ export const PredictionResult = ({ result }) => {
                         delay={0.1}
                     />
                 </div>
+
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-2xl p-8 border border-blue-100/50 relative overflow-hidden"
+                >
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400" />
+                    <div className="flex gap-4">
+                        <div className="flex-shrink-0 p-3 bg-blue-100 rounded-full h-fit">
+                            <CheckCircle2 className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div className="w-full">
+                            <h4 className="font-bold text-blue-900 text-lg mb-2">
+                                Fertilizer Insights
+                            </h4>
+                            <p className="text-blue-800/80 leading-relaxed text-lg">
+                                For your planted crop of <span className="font-bold text-blue-900 capitalize">{result.explanation?.input_data?.crop_type || 'your crop'}</span> growing in <span className="font-bold text-blue-900 capitalize">{result.explanation?.input_data?.soil_type || 'your soil'}</span>, we recommend applying <span className="font-bold text-blue-900 underline decoration-blue-300 decoration-2 underline-offset-2">{result.prediction}</span>.
+                                This recommendation is precision-tailored to your current soil nutrient metrics (N: {result.explanation?.input_data?.n ?? '—'}, P: {result.explanation?.input_data?.p ?? '—'}, K: {result.explanation?.input_data?.k ?? '—'}) and environmental conditions (Moisture: {result.explanation?.input_data?.moisture ?? '—'}%, Temp: {result.explanation?.input_data?.temperature ?? '—'}°C) to ensure optimal uptake and maximum yield potential.
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         );
     }

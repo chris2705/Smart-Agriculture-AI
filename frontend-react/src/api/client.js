@@ -1,24 +1,38 @@
 import axios from 'axios';
 
-// Automatically use the same hostname as the frontend (localhost or network IP)
+// ─── Centralized backend URL ───────────────────────────────────────────────
+// Uses the same hostname the browser opened to reach the frontend,
+// so it works on localhost, 127.0.0.1, and any LAN IP (e.g. 192.168.1.6).
 const BACKEND_URL = `http://${window.location.hostname}:8000`;
 
-export const predict = async (features, currentCrop = null) => {
+// Helper: extract a useful message from Axios errors
+const handleApiError = (error) => {
+    if (error.response) {
+        const detail = error.response.data?.detail || JSON.stringify(error.response.data);
+        throw new Error(`Backend error [${error.response.status}]: ${detail}`);
+    } else if (error.request) {
+        throw new Error('No response from backend. Is it running?');
+    } else {
+        throw new Error(`Error: ${error.message}`);
+    }
+};
+
+// ─── Crop Recommendation ───────────────────────────────────────────────────
+// POST /predict/crop  →  used when NO crop is currently planted
+export const predict = async (features) => {
     try {
-        // Backend currently exposes separate endpoints for crop and fertilizer
-        // `/predict/crop` expects { n, p, k, temperature, ph }
-        // Older frontend passed an array; support both representations.
-        let body = null;
+        // Support both array and object payloads
+        let body;
         if (Array.isArray(features)) {
-            // Map array -> expected object
-            // frontend array shape commonly: [n, p, k, pH, moisture, temperature, NPK_total]
-            const n = features[0];
-            const p = features[1];
-            const k = features[2];
-            const pH = features[3];
-            const moisture = features[4];
-            const temperature = features[5];
-            body = { n, p, k, temperature, ph: pH, moisture };
+            // Array order: [n, p, k, pH, moisture, temperature, ...]
+            body = {
+                n: features[0],
+                p: features[1],
+                k: features[2],
+                ph: features[3],
+                moisture: features[4],
+                temperature: features[5],
+            };
         } else if (features && typeof features === 'object') {
             body = features;
         } else {
@@ -28,63 +42,50 @@ export const predict = async (features, currentCrop = null) => {
         const response = await axios.post(`${BACKEND_URL}/predict/crop`, body);
         const data = response.data || {};
 
-        // Try to enrich probabilities with crop names from backend
+        // Enrich probabilities with crop names
         let cropProbMap = {};
         try {
             const cropsResp = await axios.get(`${BACKEND_URL}/supported-crops`);
             const crops = cropsResp.data?.crops || [];
             const probs = data.probabilities || [];
-            probs.forEach((p, i) => {
-                const name = crops[i] || `class_${i}`;
-                cropProbMap[name] = p;
+            probs.forEach((prob, i) => {
+                cropProbMap[crops[i] || `class_${i}`] = prob;
             });
-        } catch (e) {
-            // ignore - leave empty map
+        } catch (_) {
+            // non-critical — leave map empty
         }
 
         return {
-            prediction: data.prediction || data.predicted || null,
+            prediction: data.prediction || null,
             explanation: {
                 crop_probabilities: cropProbMap,
-                fertilizer_recommendation: data.fertilizer || data.recommendation || null,
-                input_data: body
+                fertilizer_recommendation: null,
+                input_data: body,
             },
-            shap_summary_url: data.shap_summary_url || null,
-            lime_examples: data.lime_examples || null,
-            existing_crop_analysis: data.existing_crop_analysis || null
         };
     } catch (error) {
-        if (error.response) {
-            throw new Error(`Backend error [${error.response.status}]: ${JSON.stringify(error.response.data) || error.response.statusText}`);
-        } else if (error.request) {
-            throw new Error("No response from backend. Is it running?");
-        } else {
-            throw new Error(`Error: ${error.message}`);
-        }
+        handleApiError(error);
     }
 };
 
-export const chat = async (message, context) => {
-    try {
-        const response = await axios.post(`${BACKEND_URL}/chat`, { message, context });
-        return response.data;
-    } catch (error) {
-        console.error("Chat error:", error);
-        return { response: "Sorry, I'm having trouble connecting to the server right now." };
-    }
-};
-
+// ─── Fertilizer Recommendation ─────────────────────────────────────────────
+// POST /predict/fertilizer  →  used when a crop IS already planted
 export const recommendFertilizer = async (payload) => {
     try {
         const response = await axios.post(`${BACKEND_URL}/predict/fertilizer`, payload);
         return response.data;
     } catch (error) {
-        if (error.response) {
-            throw new Error(`Backend error [${error.response.status}]: ${JSON.stringify(error.response.data)}`);
-        } else if (error.request) {
-            throw new Error("No response from backend. Is it running?");
-        } else {
-            throw new Error(`Error: ${error.message}`);
-        }
+        handleApiError(error);
+    }
+};
+
+// ─── Chat ──────────────────────────────────────────────────────────────────
+export const chat = async (message, context) => {
+    try {
+        const response = await axios.post(`${BACKEND_URL}/chat`, { message, context });
+        return response.data;
+    } catch (error) {
+        console.error('Chat error:', error);
+        return { response: "Sorry, I'm having trouble connecting to the server right now." };
     }
 };

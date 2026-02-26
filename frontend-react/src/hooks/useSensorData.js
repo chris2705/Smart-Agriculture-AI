@@ -5,13 +5,10 @@ import { database } from '../lib/firebase';
 /**
  * Custom hook to subscribe to real-time sensor data from Firebase RTDB.
  *
- * @param {string} sensorId - The sensor/device ID. Currently the ESP32
- *   pushes all data to the single path `/sensorData`, so this param is
- *   accepted for future multi-sensor support but the listener always
- *   reads from `/sensorData`.
+ * @param {string} sensorId - The sensor/device ID (path: sensors/<sensorId>)
  * @returns {{ sensorData, isConnected, lastUpdated, error }}
  *
- * Expected RTDB structure at /sensorData:
+ * Expected RTDB structure at sensors/<sensorId>:
  * {
  *   nitrogen: number,
  *   phosphorus: number,
@@ -19,7 +16,7 @@ import { database } from '../lib/firebase';
  *   pH: number,
  *   moisture: number,
  *   temperature: number,
- *   timestamp: number (Arduino millis() uptime – NOT epoch)
+ *   timestamp: number (ms since epoch)
  * }
  */
 export const useSensorData = (sensorId = 'default') => {
@@ -61,11 +58,11 @@ export const useSensorData = (sensorId = 'default') => {
                             moisture: data.moisture ?? null,
                             temperature: data.temperature ?? null,
                         });
-                        // The Arduino currently sends millis() (device uptime),
-                        // which is NOT a real epoch timestamp. We use the
-                        // current wall-clock time as the "last updated" stamp
-                        // so the UI shows a meaningful recency indicator.
-                        setLastUpdated(new Date());
+                        setLastUpdated(
+                            data.timestamp
+                                ? new Date(data.timestamp)
+                                : new Date()
+                        );
                         setIsConnected(true);
                     } else {
                         // Path exists but no data yet

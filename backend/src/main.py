@@ -8,10 +8,12 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 
 load_dotenv(override=True)
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
 
 from fastapi.middleware.cors import CORSMiddleware
 from . import auth, models, database, fields

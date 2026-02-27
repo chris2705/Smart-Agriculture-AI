@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Sprout, MapPin, Ruler, ChevronRight, LogOut, Trash2, User as UserIcon, LayoutGrid } from 'lucide-react';
+import { Plus, Sprout, MapPin, Ruler, ChevronRight, LogOut, Trash2, User as UserIcon, LayoutGrid, ArrowLeft } from 'lucide-react';
 import { AddFieldWizard } from '../components/AddFieldWizard';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -112,6 +112,15 @@ export const Dashboard = () => {
                 {/* User + Actions */}
                 {user && (
                     <div className="flex items-center gap-3">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate('/welcome')}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-green-700 hover:text-green-800 bg-green-50 border border-green-200 transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="hidden sm:block">Welcome Page</span>
+                        </motion.button>
                         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/70 shadow-sm border border-green-100">
                             <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm"
                                 style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>

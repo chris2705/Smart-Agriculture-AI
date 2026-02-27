@@ -35,7 +35,7 @@ export const AuthPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!loading && user) navigate('/dashboard');
+        if (!loading && user) navigate('/welcome');
     }, [user, loading, navigate]);
 
     const handleSubmit = async (e) => {
@@ -45,7 +45,7 @@ export const AuthPage = () => {
         const res = isLogin
             ? await login(formData.email, formData.password)
             : await register(formData.fullName, formData.email, formData.password);
-        if (res.success) navigate('/dashboard');
+        if (res.success) navigate('/welcome');
         else setError(res.message);
         setIsLoading(false);
     };

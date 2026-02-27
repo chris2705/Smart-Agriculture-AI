@@ -76,17 +76,17 @@ export const Dashboard = () => {
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden">
+        <div className="min-h-screen relative overflow-hidden bg-green-50">
             {/* Background */}
             <div className="fixed inset-0 -z-20"
-                style={{ background: 'linear-gradient(160deg, #071a0a 0%, #0f2a0f 50%, #081810 100%)' }} />
-            <div className="fixed inset-0 -z-10 opacity-8"
+                style={{ background: 'linear-gradient(160deg, #f0fdf4 0%, #dcfce7 50%, #ecfdf5 100%)' }} />
+            <div className="fixed inset-0 -z-10 opacity-[0.05]"
                 style={{
                     backgroundImage: `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2070&auto=format&fit=crop')`,
                     backgroundSize: 'cover', backgroundPosition: 'center'
                 }} />
             <div className="fixed inset-0 -z-10 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(52,168,83,0.10) 0%, transparent 70%)' }} />
+                style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(74,222,128,0.2) 0%, transparent 70%)' }} />
 
             {/* Top nav */}
             <motion.nav
@@ -95,37 +95,35 @@ export const Dashboard = () => {
                 transition={{ duration: 0.6, ease: 'easeOut' }}
                 className="sticky top-0 z-50 px-6 py-4 flex items-center justify-between"
                 style={{
-                    background: 'rgba(7,26,10,0.85)',
+                    background: 'rgba(255,255,255,0.85)',
                     backdropFilter: 'blur(20px)',
-                    borderBottom: '1px solid rgba(255,255,255,0.07)'
+                    borderBottom: '1px solid rgba(34,197,94,0.2)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
                 }}
             >
                 {/* Logo */}
                 <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                        style={{ background: 'rgba(52,168,83,0.2)', border: '1px solid rgba(52,168,83,0.4)' }}>
-                        <Sprout className="w-5 h-5 text-green-400" />
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-white shadow-sm border border-green-200">
+                        <Sprout className="w-5 h-5 text-green-600" />
                     </div>
-                    <span className="text-green-300 font-bold text-lg tracking-wide">SmartAgri AI</span>
+                    <span className="text-green-800 font-extrabold text-lg tracking-wide">SmartAgri AI</span>
                 </div>
 
                 {/* User + Actions */}
                 {user && (
                     <div className="flex items-center gap-3">
-                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl"
-                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                                style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/70 shadow-sm border border-green-100">
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm"
+                                style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
                                 {user.full_name?.[0]?.toUpperCase() || 'U'}
                             </div>
-                            <span className="text-white/70 text-sm">{user.full_name}</span>
+                            <span className="text-green-900 font-semibold text-sm">{user.full_name}</span>
                         </div>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleLogout}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
-                            style={{ background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.15)' }}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold text-red-500 hover:text-red-600 bg-red-50 border border-red-200 transition-colors"
                         >
                             <LogOut className="w-4 h-4" />
                             <span className="hidden sm:block">Sign Out</span>
@@ -144,23 +142,22 @@ export const Dashboard = () => {
                 >
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <LayoutGrid className="w-5 h-5 text-green-400" />
-                            <span className="text-green-400 text-sm font-semibold uppercase tracking-wider">My Fields</span>
+                            <LayoutGrid className="w-5 h-5 text-green-600" />
+                            <span className="text-green-700 text-sm font-extrabold uppercase tracking-wider">My Fields</span>
                         </div>
-                        <h1 className="text-4xl font-bold text-white">Farm Dashboard</h1>
-                        <p style={{ color: 'rgba(200,240,210,0.5)' }} className="mt-1">
+                        <h1 className="text-4xl font-extrabold text-green-950">Farm Dashboard</h1>
+                        <p className="mt-1 text-green-800 font-medium">
                             Manage your crops and soil health reports
                         </p>
                     </div>
 
                     <motion.button
-                        whileHover={{ scale: 1.06, boxShadow: '0 0 30px rgba(52,168,83,0.5)' }}
+                        whileHover={{ scale: 1.06, boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}
                         whileTap={{ scale: 0.94 }}
                         onClick={() => setIsWizardOpen(true)}
-                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-white"
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-white shadow-lg"
                         style={{
-                            background: 'linear-gradient(135deg, #2d6a4f, #52b788)',
-                            boxShadow: '0 4px 20px rgba(52,168,83,0.35)'
+                            background: 'linear-gradient(135deg, #22c55e, #16a34a)'
                         }}
                     >
                         <Plus className="w-5 h-5" />
@@ -191,16 +188,16 @@ export const Dashboard = () => {
                                 >
                                     🌾
                                 </motion.div>
-                                <h3 className="text-2xl font-bold text-white mb-3">No fields added yet</h3>
-                                <p className="max-w-sm mx-auto mb-8" style={{ color: 'rgba(200,240,210,0.5)' }}>
+                                <h3 className="text-2xl font-extrabold text-green-900 mb-3">No fields added yet</h3>
+                                <p className="max-w-sm mx-auto mb-8 text-green-700 font-medium">
                                     Add your first field to get personalized crop recommendations and soil analysis.
                                 </p>
                                 <motion.button
                                     whileHover={{ scale: 1.04 }}
                                     whileTap={{ scale: 0.96 }}
                                     onClick={() => setIsWizardOpen(true)}
-                                    className="px-8 py-3 rounded-2xl font-bold text-white"
-                                    style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)', boxShadow: '0 4px 20px rgba(52,168,83,0.35)' }}
+                                    className="px-8 py-3 rounded-2xl font-bold text-white shadow-md"
+                                    style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
                                 >
                                     🌱 Add Your First Field
                                 </motion.button>
@@ -239,27 +236,24 @@ export const Dashboard = () => {
                                         </button>
                                     </div>
 
-                                    {/* Card body */}
                                     <div className="p-5">
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <h3 className="text-lg font-bold text-white mb-0.5">{field.name}</h3>
-                                                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                                    style={{ background: 'rgba(52,168,83,0.2)', color: '#95d5b2', border: '1px solid rgba(52,168,83,0.3)' }}>
+                                                <h3 className="text-lg font-extrabold text-green-950 mb-0.5">{field.name}</h3>
+                                                <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-green-100 text-green-800 border-green-200 border">
                                                     {field.crop_type && field.crop_type !== 'None' ? field.crop_type : 'No crop planted'}
                                                 </span>
                                             </div>
-                                            <ChevronRight className="w-5 h-5 mt-1 transition-transform duration-300 group-hover:translate-x-1"
-                                                style={{ color: 'rgba(82,183,136,0.6)' }} />
+                                            <ChevronRight className="w-5 h-5 mt-1 transition-transform duration-300 group-hover:translate-x-1 text-green-400" />
                                         </div>
 
-                                        <div className="space-y-2 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                                            <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(200,240,210,0.5)' }}>
-                                                <MapPin className="w-3.5 h-3.5 text-green-500/70" />
+                                        <div className="space-y-2 pt-3 border-t border-green-100">
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-green-700">
+                                                <MapPin className="w-3.5 h-3.5 text-green-500" />
                                                 {field.location || 'Unknown Location'}
                                             </div>
-                                            <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(200,240,210,0.5)' }}>
-                                                <Ruler className="w-3.5 h-3.5 text-green-500/70" />
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-green-700">
+                                                <Ruler className="w-3.5 h-3.5 text-green-500" />
                                                 {field.size} acres
                                             </div>
                                         </div>

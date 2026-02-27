@@ -35,7 +35,7 @@ const ResultCard = ({ title, value, categoryName, fertilizers, icon: Icon, color
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay }}
         className={cn(
-            "relative overflow-hidden group rounded-3xl p-6 shadow-xl border border-white/50",
+            "relative overflow-hidden group rounded-3xl p-6 shadow-md border border-green-100",
             "bg-white/80 backdrop-blur-xl"
         )}
     >
@@ -52,20 +52,20 @@ const ResultCard = ({ title, value, categoryName, fertilizers, icon: Icon, color
             </div>
 
             <div>
-                <h3 className="text-sm font-bold text-zinc-700 uppercase tracking-wider mb-1">{title}</h3>
-                <div className="text-3xl font-display font-bold text-zinc-900 leading-tight">
+                <h3 className="text-sm font-extrabold text-green-800 uppercase tracking-wider mb-1">{title}</h3>
+                <div className="text-3xl font-display font-black text-green-950 leading-tight">
                     {categoryName || value}
                 </div>
                 {fertilizers && fertilizers.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-zinc-300">
-                        <div className="text-sm font-bold text-zinc-800 uppercase tracking-wider mb-2">Recommended Options</div>
+                    <div className="mt-4 pt-4 border-t border-green-100">
+                        <div className="text-sm font-bold text-green-800 uppercase tracking-wider mb-2">Recommended Options</div>
                         <div className="flex flex-wrap gap-2">
                             {fertilizers.map((fert, idx) => (
                                 <span
                                     key={idx}
                                     className={cn(
-                                        "px-4 py-2 rounded-xl text-md font-bold border-2 shadow-sm transition-transform hover:scale-105",
-                                        "bg-blue-100/80 text-blue-900 border-blue-400/50"
+                                        "px-4 py-2 rounded-xl text-md font-bold border shadow-sm transition-transform hover:scale-105",
+                                        "bg-blue-50 text-blue-800 border-blue-200"
                                     )}
                                 >
                                     {fert}
@@ -98,8 +98,8 @@ export const PredictionResult = ({ result }) => {
                     transition={{ duration: 0.6 }}
                     className="flex items-center gap-4 mb-8"
                 >
-                    <div className="h-1.5 w-16 bg-gradient-to-r from-nature-400 to-emerald-300 rounded-full shadow-lg" />
-                    <h2 className="text-3xl font-display font-extrabold text-nature-50 tracking-tight">Analysis Results</h2>
+                    <div className="h-1.5 w-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-md" />
+                    <h2 className="text-3xl font-display font-black text-green-900 tracking-tight">Analysis Results</h2>
                 </motion.div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <ResultCard
@@ -161,31 +161,33 @@ export const PredictionResult = ({ result }) => {
                 transition={{ duration: 0.6 }}
                 className="flex items-center gap-4 mb-8"
             >
-                <div className="h-1.5 w-16 bg-gradient-to-r from-nature-400 to-emerald-300 rounded-full shadow-lg" />
-                <h2 className="text-3xl font-display font-extrabold text-nature-50 tracking-tight">Analysis Results</h2>
+                <div className="h-1.5 w-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-md" />
+                <h2 className="text-3xl font-display font-black text-green-900 tracking-tight">Analysis Results</h2>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className={`grid grid-cols-1 ${result.explanation?.fertilizer_recommendation ? 'md:grid-cols-2' : ''} gap-8`}>
                 {!result.existing_crop_analysis && (
                     <ResultCard
                         title="Optimal Crop"
                         value={result.prediction}
                         icon={Sprout}
-                        colorClass="bg-nature-600 text-nature-600"
-                        gradient="from-nature-400 to-emerald-400"
+                        colorClass="bg-green-600 text-green-600"
+                        gradient="from-green-400 to-emerald-400"
                         delay={0.1}
                     />
                 )}
-                <ResultCard
-                    title="Fertilizer Category"
-                    value={result.explanation?.fertilizer_recommendation}
-                    categoryName={fertDetailsCombined.categoryName}
-                    fertilizers={fertDetailsCombined.fertilizers}
-                    icon={TestTube}
-                    colorClass="bg-blue-600 text-blue-600"
-                    gradient="from-blue-400 to-indigo-400"
-                    delay={0.2}
-                />
+                {result.explanation?.fertilizer_recommendation && (
+                    <ResultCard
+                        title="Fertilizer Category"
+                        value={result.explanation?.fertilizer_recommendation}
+                        categoryName={fertDetailsCombined.categoryName}
+                        fertilizers={fertDetailsCombined.fertilizers}
+                        icon={TestTube}
+                        colorClass="bg-blue-600 text-blue-600"
+                        gradient="from-blue-400 to-indigo-400"
+                        delay={0.2}
+                    />
+                )}
             </div>
 
             {!result.existing_crop_analysis ? (
@@ -193,12 +195,12 @@ export const PredictionResult = ({ result }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="glass-panel rounded-[2rem] p-8 md:p-10 relative overflow-hidden"
+                    className="bg-white/80 backdrop-blur-md rounded-[2rem] p-8 md:p-10 relative overflow-hidden border border-green-200 shadow-md"
                 >
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-nature-100/50 rounded-full blur-3xl -z-10 -mr-16 -mt-16" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-green-100/50 rounded-full blur-3xl -z-10 -mr-16 -mt-16" />
 
-                    <h3 className="text-xl font-bold text-zinc-800 mb-8 flex items-center gap-3">
-                        <Activity className="w-6 h-6 text-nature-600" />
+                    <h3 className="text-xl font-extrabold text-green-900 mb-8 flex items-center gap-3">
+                        <Activity className="w-6 h-6 text-green-600" />
                         Crop Probability Analysis
                     </h3>
 
@@ -206,17 +208,17 @@ export const PredictionResult = ({ result }) => {
                         {sortedProbs.map(([crop, prob], idx) => (
                             <div key={crop} className="relative group">
                                 <div className="flex justify-between items-end mb-2">
-                                    <span className="font-semibold text-zinc-700 capitalize text-lg">{crop}</span>
-                                    <span className="font-mono text-sm font-medium text-zinc-500">{(prob * 100).toFixed(1)}%</span>
+                                    <span className="font-bold text-green-800 capitalize text-lg">{crop}</span>
+                                    <span className="font-mono text-sm font-bold text-green-600">{(prob * 100).toFixed(1)}%</span>
                                 </div>
-                                <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden shadow-inner">
+                                <div className="h-4 w-full bg-green-50 rounded-full overflow-hidden shadow-inner border border-green-100">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${prob * 100}%` }}
                                         transition={{ duration: 1.5, delay: 0.5 + (idx * 0.1), ease: "easeOut" }}
                                         className={cn(
                                             "h-full rounded-full relative overflow-hidden",
-                                            idx === 0 ? "bg-gradient-to-r from-nature-500 to-emerald-500" : "bg-zinc-300"
+                                            idx === 0 ? "bg-gradient-to-r from-green-500 to-emerald-500" : "bg-green-300"
                                         )}
                                     >
                                         {idx === 0 && (
@@ -285,7 +287,7 @@ export const PredictionResult = ({ result }) => {
                 >
                     <div className="flex items-center gap-4 mb-8">
                         <div className="h-1.5 w-16 bg-gradient-to-r from-purple-400 to-fuchsia-300 rounded-full shadow-lg" />
-                        <h2 className="text-3xl font-display font-extrabold text-nature-50 tracking-tight">Model Insights (XAI)</h2>
+                        <h2 className="text-3xl font-display font-black text-green-900 tracking-tight">Model Insights (XAI)</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

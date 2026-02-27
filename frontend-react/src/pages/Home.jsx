@@ -83,12 +83,12 @@ export const Home = () => {
 
     return (
         <div className="min-h-screen relative overflow-x-hidden">
-            {/* Fixed deep green background */}
+            {/* Fixed light green background */}
             <div className="fixed inset-0 -z-20"
-                style={{ background: 'linear-gradient(160deg, #071a0a 0%, #0f2a0f 50%, #081810 100%)' }} />
+                style={{ background: 'linear-gradient(160deg, #f0fdf4 0%, #dcfce7 50%, #ecfdf5 100%)' }} />
 
             {/* Background farm image with subtle overlay */}
-            <div className="fixed inset-0 -z-10 opacity-10"
+            <div className="fixed inset-0 -z-10 opacity-[0.05]"
                 style={{
                     backgroundImage: `url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=2070&auto=format&fit=crop')`,
                     backgroundSize: 'cover', backgroundPosition: 'center'
@@ -111,10 +111,10 @@ export const Home = () => {
                         className="flex items-center gap-2"
                     >
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                            style={{ background: 'rgba(52,168,83,0.2)', border: '1px solid rgba(52,168,83,0.4)' }}>
-                            <Sprout className="w-5 h-5 text-green-400" />
+                            style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)' }}>
+                            <Sprout className="w-5 h-5 text-green-600" />
                         </div>
-                        <span className="text-green-300 font-bold text-lg tracking-wide">SmartAgri AI</span>
+                        <span className="text-green-800 font-extrabold text-lg tracking-wide">SmartAgri AI</span>
                     </motion.div>
 
                     <motion.div
@@ -124,19 +124,19 @@ export const Home = () => {
                     >
                         {user ? (
                             <div className="flex items-center gap-2 px-4 py-2 rounded-2xl"
-                                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}>
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                                    style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)' }}>
+                                style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(34,197,94,0.2)', backdropFilter: 'blur(12px)', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm"
+                                    style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}>
                                     {user.full_name?.[0]?.toUpperCase() || 'U'}
                                 </div>
-                                <span className="text-white/80 text-sm font-medium hidden sm:block">{user.full_name}</span>
+                                <span className="text-green-900 text-sm font-semibold hidden sm:block">{user.full_name}</span>
                                 <div className="flex gap-1 ml-2">
                                     <button onClick={() => navigate('/dashboard')}
-                                        className="p-1.5 rounded-lg hover:bg-white/10 text-green-400 transition-colors" title="Dashboard">
+                                        className="p-1.5 rounded-lg hover:bg-green-100 text-green-700 transition-colors" title="Dashboard">
                                         <LayoutDashboard className="w-4 h-4" />
                                     </button>
                                     <button onClick={logout}
-                                        className="p-1.5 rounded-lg hover:bg-white/10 text-red-400 transition-colors" title="Sign Out">
+                                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors" title="Sign Out">
                                         <LogOut className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -146,8 +146,8 @@ export const Home = () => {
                                 whileHover={{ scale: 1.04 }}
                                 whileTap={{ scale: 0.96 }}
                                 onClick={() => navigate('/')}
-                                className="px-5 py-2.5 rounded-2xl text-white font-semibold text-sm transition-all"
-                                style={{ background: 'rgba(52,168,83,0.2)', border: '1px solid rgba(52,168,83,0.4)' }}
+                                className="px-5 py-2.5 rounded-2xl text-green-800 font-bold text-sm transition-all bg-white shadow-sm hover:shadow-md"
+                                style={{ border: '1px solid rgba(34,197,94,0.3)' }}
                             >
                                 Log In
                             </motion.button>
@@ -161,14 +161,13 @@ export const Home = () => {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ type: 'spring', duration: 0.8 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 text-sm font-semibold"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 text-sm font-bold bg-white/60 shadow-sm"
                         style={{
-                            background: 'rgba(52,168,83,0.15)',
-                            border: '1px solid rgba(82,183,136,0.4)',
-                            color: '#95d5b2'
+                            border: '1px solid rgba(34,197,94,0.3)',
+                            color: '#166534'
                         }}
                     >
-                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                         AI-Powered Precision Agriculture
                     </motion.div>
 
@@ -178,13 +177,13 @@ export const Home = () => {
                         transition={{ delay: 0.15, duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
                         className="text-5xl md:text-7xl lg:text-8xl font-extrabold leading-none tracking-tight mb-6"
                     >
-                        <span className="text-white">Cultivating the</span>
+                        <span className="text-green-950">Cultivating the</span>
                         <br />
                         <span style={{
-                            background: 'linear-gradient(135deg, #95d5b2 0%, #52b788 35%, #f4a261 80%)',
+                            background: 'linear-gradient(135deg, #15803d 0%, #16a34a 35%, #d97706 80%)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                            filter: 'drop-shadow(0 0 30px rgba(82,183,136,0.4))'
+                            filter: 'drop-shadow(0 2px 10px rgba(34,197,94,0.2))'
                         }}>
                             Future of Farming
                         </span>
@@ -194,8 +193,7 @@ export const Home = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3, duration: 0.7 }}
-                        className="text-lg md:text-xl max-w-2xl leading-relaxed mb-10"
-                        style={{ color: 'rgba(200,240,210,0.65)' }}
+                        className="text-lg md:text-xl max-w-2xl leading-relaxed mb-10 text-green-800 font-medium"
                     >
                         Advanced machine learning for precision soil diagnostics, optimal crop yield predictions,
                         and AI-driven fertilizer recommendations.
@@ -208,11 +206,11 @@ export const Home = () => {
                         className="flex gap-3 flex-wrap justify-center"
                     >
                         <motion.button
-                            whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(52,168,83,0.5)' }}
+                            whileHover={{ scale: 1.05, boxShadow: '0 10px 30px rgba(34,197,94,0.3)' }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => document.getElementById('analyze')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="px-8 py-4 rounded-2xl font-bold text-white text-lg"
-                            style={{ background: 'linear-gradient(135deg, #2d6a4f, #52b788)', boxShadow: '0 4px 20px rgba(52,168,83,0.35)' }}
+                            className="px-8 py-4 rounded-2xl font-bold text-white text-lg shadow-lg"
+                            style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
                         >
                             🌱 Analyze My Soil
                         </motion.button>
@@ -220,8 +218,8 @@ export const Home = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={goToChat}
-                            className="px-8 py-4 rounded-2xl font-bold text-green-300 text-lg"
-                            style={{ background: 'rgba(52,168,83,0.12)', border: '1px solid rgba(82,183,136,0.35)' }}
+                            className="px-8 py-4 rounded-2xl font-bold text-green-800 text-lg bg-white shadow-md"
+                            style={{ border: '1px solid rgba(34,197,94,0.2)' }}
                         >
                             🤖 Ask AI
                         </motion.button>
@@ -260,8 +258,8 @@ export const Home = () => {
                             className="agri-card p-5 text-center"
                         >
                             <div className="text-3xl mb-3">{s.emoji}</div>
-                            <div className="text-green-300 font-bold text-sm mb-1">{s.label}</div>
-                            <div className="text-white/40 text-xs">{s.desc}</div>
+                            <div className="text-green-800 font-extrabold text-sm mb-1">{s.label}</div>
+                            <div className="text-green-600/80 text-xs font-medium">{s.desc}</div>
                         </motion.div>
                     ))}
                 </motion.div>
@@ -298,11 +296,11 @@ export const Home = () => {
                             <div className="mb-10">
                                 <div className="flex items-center gap-3 mb-2">
                                     <span className="text-2xl">🔬</span>
-                                    <h2 className="text-2xl font-bold text-white">Soil Analysis Parameters</h2>
+                                    <h2 className="text-2xl font-extrabold text-green-900">Soil Analysis Parameters</h2>
                                 </div>
-                                <p style={{ color: 'rgba(200,240,210,0.5)' }}>
+                                <p className="text-green-700 font-medium">
                                     Enter your soil metrics to generate a precision crop recommendation report
-                                    {sensorData && <span className="ml-1 text-blue-300">— or load values from your connected sensor above! 📡</span>}
+                                    {sensorData && <span className="ml-1 text-blue-600 font-semibold">— or load values from your connected sensor above! 📡</span>}
                                 </p>
                             </div>
                             <SoilForm
@@ -343,8 +341,8 @@ export const Home = () => {
                                     exit={{ opacity: 0, y: -20 }}
                                     transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
                                 >
-                                    <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center">
-                                        <div className="text-lg font-semibold text-green-200">✅ Recommended Fertilizer: <span className="font-bold text-white">{result.fertilizer}</span></div>
+                                    <div className="p-6 rounded-2xl bg-white border border-green-200 shadow-md text-center">
+                                        <div className="text-lg font-semibold text-green-800">✅ Recommended Fertilizer: <span className="font-bold text-green-950">{result.fertilizer}</span></div>
                                     </div>
                                 </motion.div>
                             )}
@@ -365,7 +363,7 @@ export const Home = () => {
             </section>
 
             {/* Footer */}
-            <footer className="text-center py-12 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)', color: 'rgba(200,240,210,0.3)' }}>
+            <footer className="text-center py-12 border-t border-green-200 text-green-800 font-medium">
                 <div className="flex justify-center gap-2 mb-2 text-lg">
                     {['🌾', '🌱', '🌿', '🌻', '🌾'].map((e, i) => (
                         <motion.span key={i} animate={{ y: [0, -4, 0] }}
@@ -374,7 +372,7 @@ export const Home = () => {
                         </motion.span>
                     ))}
                 </div>
-                <p className="text-sm font-medium">© 2025 Smart Agriculture AI • Precision Farming Technology</p>
+                <p className="text-sm">© 2025 Smart Agriculture AI • Precision Farming Technology</p>
             </footer>
 
             {/* Floating Chat Button */}
@@ -388,14 +386,11 @@ export const Home = () => {
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={goToChat}
-                    className="flex items-center gap-3 pl-6 pr-5 py-4 rounded-full font-semibold text-white relative"
-                    style={{
-                        background: 'linear-gradient(135deg, #1b4332, #2d6a4f)',
-                        boxShadow: '0 8px 32px rgba(45,106,79,0.5), 0 0 0 1px rgba(82,183,136,0.3)'
-                    }}
+                    className="flex items-center gap-3 pl-6 pr-5 py-4 rounded-full font-bold text-white relative shadow-xl"
+                    style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
                 >
                     <span className="text-base">Ask AI Assistant</span>
-                    <div className="p-2 rounded-full" style={{ background: 'rgba(82,183,136,0.25)' }}>
+                    <div className="p-2 rounded-full bg-white/20">
                         <MessageCircle className="w-5 h-5" />
                     </div>
                     {result && (

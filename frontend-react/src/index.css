@@ -15,13 +15,13 @@
 
   body {
     @apply font-sans antialiased;
-    background-color: #0f2010;
+    background-color: #e8f5e9; /* Light green solid fallback */
     background-image:
-      radial-gradient(ellipse at 0% 0%, rgba(52, 168, 83, 0.18) 0px, transparent 60%),
-      radial-gradient(ellipse at 100% 0%, rgba(45, 106, 79, 0.15) 0px, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, rgba(82, 183, 136, 0.12) 0px, transparent 60%);
+      radial-gradient(ellipse at 0% 0%, rgba(129, 199, 132, 0.4) 0px, transparent 60%),
+      radial-gradient(ellipse at 100% 0%, rgba(165, 214, 167, 0.3) 0px, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(200, 230, 201, 0.5) 0px, transparent 60%);
     background-attachment: fixed;
-    color: #f0faf2;
+    color: #1a3622; /* Darker text for readability on light bg */
   }
 
   html {
@@ -34,7 +34,7 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #0f2010;
+    background: #e8f5e9;
   }
 
   ::-webkit-scrollbar-thumb {

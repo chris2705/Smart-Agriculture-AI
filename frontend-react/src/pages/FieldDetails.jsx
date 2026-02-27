@@ -130,13 +130,13 @@ export const FieldDetails = () => {
     const bannerUrl = getBanner(fieldData.crop_type);
 
     return (
-        <div className="min-h-screen relative overflow-hidden">
+        <div className="min-h-screen relative overflow-hidden bg-green-50">
             {/* Background */}
             <div className="fixed inset-0 -z-20"
-                style={{ background: 'linear-gradient(160deg, #071a0a 0%, #0f2a0f 50%, #081810 100%)' }} />
+                style={{ background: 'linear-gradient(160deg, #f0fdf4 0%, #dcfce7 50%, #ecfdf5 100%)' }} />
 
             {/* Hero field banner */}
-            <div className="relative h-72 md:h-96 overflow-hidden">
+            <div className="relative h-72 md:h-96 overflow-hidden shadow-sm">
                 <motion.div
                     initial={{ scale: 1.1 }}
                     animate={{ scale: 1 }}
@@ -144,9 +144,9 @@ export const FieldDetails = () => {
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url('${bannerUrl}')` }}
                 />
-                {/* Dark gradient overlay */}
+                {/* Light gradient overlay */}
                 <div className="absolute inset-0"
-                    style={{ background: 'linear-gradient(180deg, rgba(7,26,10,0.4) 0%, rgba(7,26,10,0.95) 100%)' }} />
+                    style={{ background: 'linear-gradient(180deg, rgba(240,253,244,0.4) 0%, rgba(220,252,231,0.95) 100%)' }} />
 
                 {/* Back button on top of banner */}
                 <motion.button
@@ -156,15 +156,15 @@ export const FieldDetails = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => navigate('/dashboard')}
-                    className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2.5 rounded-2xl font-medium text-sm transition-all"
+                    className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all shadow-sm"
                     style={{
-                        background: 'rgba(7,26,10,0.7)',
+                        background: 'rgba(255,255,255,0.8)',
                         backdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(255,255,255,0.12)',
-                        color: '#95d5b2'
+                        border: '1px solid rgba(34,197,94,0.3)',
+                        color: '#166534'
                     }}
                 >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4 text-green-700" />
                     Back to Dashboard
                 </motion.button>
 
@@ -176,23 +176,21 @@ export const FieldDetails = () => {
                         transition={{ delay: 0.2, duration: 0.7 }}
                     >
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                                style={{ background: 'rgba(52,168,83,0.25)', border: '1px solid rgba(82,183,136,0.4)' }}>
-                                <Sprout className="w-6 h-6 text-green-300" />
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white shadow-sm border border-green-300">
+                                <Sprout className="w-6 h-6 text-green-600" />
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-extrabold text-white">{fieldData.name}</h1>
+                            <h1 className="text-4xl md:text-5xl font-extrabold text-green-950">{fieldData.name}</h1>
                         </div>
                         <div className="flex flex-wrap gap-3">
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
-                                style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', color: 'rgba(200,240,210,0.8)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                                <MapPin className="w-3.5 h-3.5" /> {fieldData.location || 'Unknown'}
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-white/70 shadow-sm text-green-800 border-green-200 border"
+                                style={{ backdropFilter: 'blur(8px)' }}>
+                                <MapPin className="w-3.5 h-3.5 text-green-600" /> {fieldData.location || 'Unknown'}
                             </span>
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
-                                style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', color: 'rgba(200,240,210,0.8)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                                <Ruler className="w-3.5 h-3.5" /> {fieldData.size} Acres
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-white/70 shadow-sm text-green-800 border-green-200 border"
+                                style={{ backdropFilter: 'blur(8px)' }}>
+                                <Ruler className="w-3.5 h-3.5 text-green-600" /> {fieldData.size} Acres
                             </span>
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
-                                style={{ background: 'rgba(52,168,83,0.2)', color: '#95d5b2', border: '1px solid rgba(82,183,136,0.35)' }}>
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-green-100 shadow-sm text-green-900 border-green-300 border">
                                 🌱 {fieldData.crop_type && fieldData.crop_type !== 'None' ? fieldData.crop_type : 'No Crop Planted'}
                             </span>
                         </div>
@@ -229,13 +227,13 @@ export const FieldDetails = () => {
 
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-2">
-                            <FlaskConical className="w-6 h-6 text-green-400" />
-                            <h2 className="text-2xl font-bold text-white">Generate Soil Analysis</h2>
+                            <FlaskConical className="w-6 h-6 text-green-600" />
+                            <h2 className="text-2xl font-extrabold text-green-950">Generate Soil Analysis</h2>
                         </div>
-                        <p className="mb-8 text-sm" style={{ color: 'rgba(200,240,210,0.5)' }}>
-                            Enter the latest soil metrics for <strong className="text-green-300">{fieldData.name}</strong> to get real-time
+                        <p className="mb-8 font-medium text-green-800">
+                            Enter the latest soil metrics for <strong className="text-green-900">{fieldData.name}</strong> to get real-time
                             fertilizer recommendations and crop suitability scores.
-                            {sensorData && <span className="ml-1 text-blue-300">📡 Sensor data available — click "Load into Form" above!</span>}
+                            {sensorData && <span className="ml-1 text-blue-600">📡 Sensor data available — click "Load into Form" above!</span>}
                         </p>
                         <SoilForm
                             onSubmit={handleAnalysisSubmit}
@@ -253,8 +251,7 @@ export const FieldDetails = () => {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="mb-6 p-4 rounded-2xl flex items-center gap-3"
-                            style={{ background: 'rgba(255,80,80,0.1)', border: '1px solid rgba(255,80,80,0.25)', color: '#fca5a5' }}
+                            className="mb-6 p-4 rounded-2xl flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 font-semibold"
                         >
                             <span className="text-xl">⚠️</span> {error}
                         </motion.div>
@@ -273,12 +270,11 @@ export const FieldDetails = () => {
                             >
                                 {/* Divider */}
                                 <div className="flex items-center gap-4 mb-8">
-                                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
-                                    <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full"
-                                        style={{ background: 'rgba(52,168,83,0.15)', color: '#95d5b2', border: '1px solid rgba(52,168,83,0.25)' }}>
+                                    <div className="flex-1 h-px bg-green-200" />
+                                    <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full bg-green-100 text-green-800 border border-green-300">
                                         🔬 Analysis Report
                                     </span>
-                                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
+                                    <div className="flex-1 h-px bg-green-200" />
                                 </div>
                                 <PredictionResult result={analysisResult} />
                             </motion.div>

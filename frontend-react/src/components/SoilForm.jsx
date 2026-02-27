@@ -14,38 +14,36 @@ const InputField = ({ label, name, register, icon: Icon, min, max, step, default
             transition={{ duration: 0.35 }}
             className="relative group"
         >
-            <div className="relative rounded-2xl overflow-hidden transition-all duration-300"
+            <div className="relative rounded-2xl overflow-hidden transition-all duration-300 bg-white shadow-sm"
                 style={{
                     background: isFocused
-                        ? 'rgba(52,168,83,0.12)'
+                        ? 'rgba(240,253,244,1)'
                         : hasSensorValue
-                            ? 'rgba(96,165,250,0.06)'
-                            : 'rgba(255,255,255,0.05)',
+                            ? 'rgba(239,246,255,1)'
+                            : 'rgba(255,255,255,0.8)',
                     border: isFocused
-                        ? '1px solid rgba(82,183,136,0.5)'
+                        ? '1px solid rgba(74,222,128,0.5)'
                         : hasSensorValue
-                            ? '1px solid rgba(96,165,250,0.2)'
-                            : '1px solid rgba(255,255,255,0.09)',
-                    boxShadow: isFocused ? '0 0 20px rgba(52,168,83,0.15)' : 'none'
+                            ? '1px solid rgba(96,165,250,0.5)'
+                            : '1px solid rgba(134,239,172,0.3)',
+                    boxShadow: isFocused ? '0 4px 20px rgba(34,197,94,0.15)' : 'none'
                 }}
             >
                 {/* Icon sidebar */}
-                <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center"
+                <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center bg-green-50/50 border-r border-green-100"
                     style={{
-                        background: isFocused ? 'rgba(52,168,83,0.15)' : 'rgba(255,255,255,0.04)',
-                        borderRight: '1px solid rgba(255,255,255,0.06)'
+                        background: isFocused ? 'rgba(220,252,231,0.5)' : 'rgba(240,253,244,0.5)'
                     }}>
                     <Icon className="w-4 h-4 transition-colors duration-300"
-                        style={{ color: isFocused ? '#52b788' : 'rgba(200,240,210,0.35)' }} />
+                        style={{ color: isFocused ? '#16a34a' : '#22c55e' }} />
                 </div>
 
                 <div className="pl-14 pr-4 py-3">
-                    <label className="block text-xs font-semibold uppercase tracking-wider mb-0.5 transition-colors duration-300"
-                        style={{ color: isFocused ? '#95d5b2' : 'rgba(200,240,210,0.45)' }}>
-                        {label} {unit && <span className="normal-case font-normal opacity-70">({unit})</span>}
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-0.5 transition-colors duration-300"
+                        style={{ color: isFocused ? '#166534' : '#15803d' }}>
+                        {label} {unit && <span className="normal-case font-semibold text-green-700">({unit})</span>}
                         {hasSensorValue && (
-                            <span className="ml-2 inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full normal-case font-bold"
-                                style={{ background: 'rgba(96,165,250,0.15)', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.3)' }}>
+                            <span className="ml-2 inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full normal-case font-extrabold bg-blue-100 text-blue-800 border border-blue-300">
                                 <Radio className="w-2.5 h-2.5" /> SENSOR
                             </span>
                         )}
@@ -57,8 +55,7 @@ const InputField = ({ label, name, register, icon: Icon, min, max, step, default
                         {...register(name, { required: true, valueAsNumber: true, min, max })}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
-                        className="w-full bg-transparent border-none p-0 font-semibold focus:ring-0 text-base outline-none"
-                        style={{ color: 'rgba(220,255,230,0.9)' }}
+                        className="w-full bg-transparent border-none p-0 font-extrabold focus:ring-0 text-base outline-none text-green-950 placeholder-green-700/30"
                         placeholder="0"
                     />
                 </div>
@@ -125,12 +122,7 @@ export const SoilForm = ({ onSubmit, isLoading, sensorData, fieldData }) => {
                     initial={{ opacity: 0, y: -10, height: 0 }}
                     animate={{ opacity: 1, y: 0, height: 'auto' }}
                     exit={{ opacity: 0, y: -10, height: 0 }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium"
-                    style={{
-                        background: 'rgba(96,165,250,0.1)',
-                        border: '1px solid rgba(96,165,250,0.25)',
-                        color: '#93c5fd'
-                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 border border-blue-200 text-blue-800"
                 >
                     <Radio className="w-4 h-4" />
                     ✅ Sensor values loaded! You can edit them before submitting.
@@ -167,16 +159,15 @@ export const SoilForm = ({ onSubmit, isLoading, sensorData, fieldData }) => {
 
             <div className="flex justify-center pt-4">
                 <motion.button
-                    whileHover={{ scale: 1.04, boxShadow: '0 0 40px rgba(52,168,83,0.55)' }}
+                    whileHover={{ scale: 1.04, boxShadow: '0 8px 30px rgba(34,197,94,0.3)' }}
                     whileTap={{ scale: 0.96 }}
                     type="submit"
                     disabled={isLoading}
-                    className="relative group inline-flex items-center gap-3 px-10 py-4 rounded-full text-white font-bold text-lg overflow-hidden transition-all"
+                    className="relative group inline-flex items-center gap-3 px-10 py-4 rounded-full text-white font-extrabold text-lg overflow-hidden transition-all shadow-lg"
                     style={{
                         background: isLoading
-                            ? 'rgba(45,106,79,0.6)'
-                            : 'linear-gradient(135deg, #1b4332, #2d6a4f, #52b788)',
-                        boxShadow: '0 4px 24px rgba(45,106,79,0.4)',
+                            ? 'rgba(34,197,94,0.6)'
+                            : 'linear-gradient(135deg, #22c55e, #16a34a)',
                         cursor: isLoading ? 'wait' : 'pointer'
                     }}
                 >

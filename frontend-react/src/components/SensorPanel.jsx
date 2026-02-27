@@ -8,40 +8,35 @@ const SensorGauge = ({ label, value, unit, icon: Icon, color, min = 0, max = 100
 
     return (
         <div className="relative group">
-            <div className="rounded-2xl p-4 transition-all duration-300 hover:scale-[1.03]"
+            <div className="rounded-2xl p-4 transition-all duration-300 hover:scale-[1.03] bg-white/60 shadow-sm"
                 style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(34,197,94,0.2)'
                 }}>
                 {/* Header */}
                 <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                        style={{ background: `${color}20`, border: `1px solid ${color}40` }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-white shadow-sm border border-gray-100">
                         <Icon className="w-3.5 h-3.5" style={{ color }} />
                     </div>
-                    <span className="text-xs font-semibold uppercase tracking-wider"
-                        style={{ color: 'rgba(200,240,210,0.5)' }}>{label}</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-green-800">{label}</span>
                 </div>
 
                 {/* Value */}
                 <div className="flex items-baseline gap-1.5 mb-3">
-                    <span className="text-2xl font-bold text-white tabular-nums">
+                    <span className="text-2xl font-extrabold text-green-950 tabular-nums">
                         {hasValue ? (typeof value === 'number' ? value.toFixed(1) : value) : '—'}
                     </span>
-                    {unit && <span className="text-xs font-medium" style={{ color: 'rgba(200,240,210,0.4)' }}>{unit}</span>}
+                    {unit && <span className="text-xs font-bold text-green-700">{unit}</span>}
                 </div>
 
                 {/* Gauge bar */}
-                <div className="h-1.5 rounded-full overflow-hidden"
-                    style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div className="h-1.5 rounded-full overflow-hidden bg-green-100">
                     <motion.div
                         className="h-full rounded-full"
                         initial={{ width: 0 }}
                         animate={{ width: hasValue ? `${percentage}%` : '0%' }}
                         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
                         style={{
-                            background: `linear-gradient(90deg, ${color}80, ${color})`,
-                            boxShadow: hasValue ? `0 0 8px ${color}40` : 'none'
+                            background: `linear-gradient(90deg, ${color}cc, ${color})`,
                         }}
                     />
                 </div>
@@ -84,12 +79,8 @@ export const SensorPanel = ({ sensorData, isConnected, lastUpdated, error, onLoa
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="rounded-3xl p-6 mb-6 relative overflow-hidden"
-            style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                backdropFilter: 'blur(12px)',
-            }}
+            className="rounded-3xl p-6 mb-6 relative overflow-hidden bg-white/80 shadow-md border border-green-200"
+            style={{ backdropFilter: 'blur(12px)' }}
         >
             {/* Subtle gradient accent */}
             <div className="absolute top-0 left-0 right-0 h-[2px]"
@@ -98,10 +89,9 @@ export const SensorPanel = ({ sensorData, isConnected, lastUpdated, error, onLoa
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white shadow-sm"
                         style={{
-                            background: isConnected ? 'rgba(52,168,83,0.15)' : 'rgba(255,80,80,0.15)',
-                            border: `1px solid ${isConnected ? 'rgba(52,168,83,0.35)' : 'rgba(255,80,80,0.35)'}`,
+                            border: `1px solid ${isConnected ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
                         }}>
                         {isConnected ? (
                             <Wifi className="w-5 h-5 text-green-400" />
@@ -110,20 +100,16 @@ export const SensorPanel = ({ sensorData, isConnected, lastUpdated, error, onLoa
                         )}
                     </div>
                     <div>
-                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <h3 className="text-base font-extrabold text-green-950 flex items-center gap-2">
                             📡 Live Sensor Feed
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isConnected ? 'text-green-300' : 'text-red-300'}`}
-                                style={{
-                                    background: isConnected ? 'rgba(52,168,83,0.2)' : 'rgba(255,80,80,0.2)',
-                                    border: `1px solid ${isConnected ? 'rgba(52,168,83,0.3)' : 'rgba(255,80,80,0.3)'}`,
-                                }}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isConnected ? 'text-green-800 bg-green-100 border border-green-300' : 'text-red-800 bg-red-100 border border-red-300'}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
                                 {isConnected ? 'Connected' : 'Disconnected'}
                             </span>
                         </h3>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                            <Clock className="w-3 h-3" style={{ color: 'rgba(200,240,210,0.3)' }} />
-                            <span className="text-[11px]" style={{ color: 'rgba(200,240,210,0.4)' }}>
+                            <Clock className="w-3 h-3 text-green-500" />
+                            <span className="text-[11px] font-bold text-green-700">
                                 Last update: {timeAgo}
                             </span>
                         </div>
@@ -133,13 +119,12 @@ export const SensorPanel = ({ sensorData, isConnected, lastUpdated, error, onLoa
                 {/* Load button */}
                 {sensorData && onLoadSensorData && (
                     <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(52,168,83,0.4)' }}
+                        whileHover={{ scale: 1.05, boxShadow: '0 4px 15px rgba(34,197,94,0.3)' }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onLoadSensorData(sensorData)}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-sm"
                         style={{
-                            background: 'linear-gradient(135deg, #2d6a4f, #52b788)',
-                            boxShadow: '0 4px 16px rgba(52,168,83,0.3)',
+                            background: 'linear-gradient(135deg, #16a34a, #22c55e)'
                         }}
                     >
                         <RefreshCw className="w-4 h-4" />
@@ -148,19 +133,13 @@ export const SensorPanel = ({ sensorData, isConnected, lastUpdated, error, onLoa
                 )}
             </div>
 
-            {/* Error state */}
             <AnimatePresence>
                 {error && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mb-4 p-3 rounded-xl text-xs font-medium"
-                        style={{
-                            background: 'rgba(255,80,80,0.1)',
-                            border: '1px solid rgba(255,80,80,0.2)',
-                            color: '#fca5a5'
-                        }}
+                        className="mb-4 p-3 rounded-xl text-xs font-bold bg-red-50 border border-red-200 text-red-700"
                     >
                         ⚠️ {error}
                     </motion.div>
@@ -198,12 +177,12 @@ export const SensorPanel = ({ sensorData, isConnected, lastUpdated, error, onLoa
                     >
                         📡
                     </motion.div>
-                    <p className="text-sm font-medium" style={{ color: 'rgba(200,240,210,0.4)' }}>
+                    <p className="text-sm font-bold text-green-700">
                         {isConnected
                             ? 'Waiting for sensor data...'
                             : 'Connect a sensor to see live readings'}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: 'rgba(200,240,210,0.25)' }}>
+                    <p className="text-xs mt-1 font-medium text-green-600/70">
                         Data will appear here automatically when your sensor pushes to Firebase
                     </p>
                 </div>

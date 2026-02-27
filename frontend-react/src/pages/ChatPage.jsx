@@ -18,12 +18,6 @@ export const ChatPage = () => {
         }
     }, []);
 
-    // Context summary cards derived from result
-    const ctxCards = result ? [
-        { icon: '🌱', label: 'Recommended Crop', val: result.prediction || '—' },
-        { icon: '🧪', label: 'Fertilizer', val: result.explanation?.fertilizer_recommendation || '—' },
-    ] : [];
-
     return (
         <div className="min-h-screen flex flex-col relative overflow-hidden">
             {/* Background */}
@@ -85,30 +79,6 @@ export const ChatPage = () => {
                         </p>
                     </div>
                 </div>
-
-                {/* Context badges */}
-                {ctxCards.length > 0 && (
-                    <div className="hidden md:flex items-center gap-2">
-                        {ctxCards.map((c, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 + i * 0.1 }}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium"
-                                style={{
-                                    background: 'rgba(52,168,83,0.12)',
-                                    border: '1px solid rgba(82,183,136,0.25)',
-                                    color: '#95d5b2'
-                                }}
-                            >
-                                <span>{c.icon}</span>
-                                <span className="text-white/40 text-[10px] uppercase">{c.label}:</span>
-                                <span className="font-bold text-green-300 truncate max-w-[120px]">{c.val}</span>
-                            </motion.div>
-                        ))}
-                    </div>
-                )}
             </motion.header>
 
             {/* ── MAIN CHAT LAYOUT ── */}
@@ -133,26 +103,6 @@ export const ChatPage = () => {
                         </div>
                     </div>
 
-                    {/* Context summary */}
-                    {result && (
-                        <div className="rounded-3xl p-4 space-y-3"
-                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(149,213,178,0.5)' }}>
-                                Analysis Context
-                            </p>
-                            <div className="space-y-2">
-                                {ctxCards.map((c, i) => (
-                                    <div key={i} className="flex items-center gap-2">
-                                        <span className="text-base">{c.icon}</span>
-                                        <div>
-                                            <p className="text-[10px] uppercase" style={{ color: 'rgba(149,213,178,0.45)' }}>{c.label}</p>
-                                            <p className="text-sm font-semibold text-green-300 truncate">{c.val}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
 
                     {/* Tips */}
                     <div className="rounded-3xl p-4"

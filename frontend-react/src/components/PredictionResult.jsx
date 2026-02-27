@@ -4,13 +4,38 @@ import { motion } from 'framer-motion';
 import { Sprout, TestTube, CheckCircle2, TrendingUp, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-const ResultCard = ({ title, value, icon: Icon, colorClass, delay, gradient }) => (
+const getFertilizerDetails = (category) => {
+    if (!category) return { categoryName: category, fertilizers: [] };
+    switch (category) {
+        case "Nitrogen_Rich":
+        case "Nitrogen Rich":
+            return { categoryName: "Nitrogen Rich", fertilizers: ["Urea"] };
+        case "Phosphorus_Rich":
+        case "Phosphorus Rich":
+            return { categoryName: "Phosphorus Rich", fertilizers: ["DAP", "10-26-26", "14-35-14"] };
+        case "Balanced_NPK":
+        case "Balanced NPK":
+            return { categoryName: "Balanced NPK", fertilizers: ["20-20", "28-28", "17-17-17"] };
+        default:
+            return { categoryName: category, fertilizers: [] };
+    }
+};
+
+const getFertilizerDisplay = (category) => {
+    const details = getFertilizerDetails(category);
+    if (details.fertilizers.length > 0) {
+        return `${details.categoryName} – Recommended: ${details.fertilizers.join(", ")}`;
+    }
+    return details.categoryName;
+};
+
+const ResultCard = ({ title, value, categoryName, fertilizers, icon: Icon, colorClass, delay, gradient }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay }}
         className={cn(
-            "relative overflow-hidden group rounded-3xl p-6 shadow-xl border border-white/50",
+            "relative overflow-hidden group rounded-3xl p-6 shadow-md border border-green-100",
             "bg-white/80 backdrop-blur-xl"
         )}
     >
@@ -27,10 +52,28 @@ const ResultCard = ({ title, value, icon: Icon, colorClass, delay, gradient }) =
             </div>
 
             <div>
-                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-1">{title}</h3>
-                <div className="text-3xl font-display font-bold text-zinc-900 leading-tight">
-                    {value}
+                <h3 className="text-sm font-extrabold text-green-800 uppercase tracking-wider mb-1">{title}</h3>
+                <div className="text-3xl font-display font-black text-green-950 leading-tight">
+                    {categoryName || value}
                 </div>
+                {fertilizers && fertilizers.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-green-100">
+                        <div className="text-sm font-bold text-green-800 uppercase tracking-wider mb-2">Recommended Options</div>
+                        <div className="flex flex-wrap gap-2">
+                            {fertilizers.map((fert, idx) => (
+                                <span
+                                    key={idx}
+                                    className={cn(
+                                        "px-4 py-2 rounded-xl text-md font-bold border shadow-sm transition-transform hover:scale-105",
+                                        "bg-blue-50 text-blue-800 border-blue-200"
+                                    )}
+                                >
+                                    {fert}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     </motion.div>
@@ -43,17 +86,27 @@ export const PredictionResult = ({ result }) => {
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5); // Top 5
 
+    const fertDetailsOnly = getFertilizerDetails(result.explanation?.fertilizer_recommendation || result.prediction);
+    const fertDetailsCombined = getFertilizerDetails(result.explanation?.fertilizer_recommendation);
+
     if (result.is_fertilizer_only) {
         return (
-            <div className="space-y-8 mt-16">
-                <div className="flex items-center gap-2 mb-6">
-                    <div className="h-1 w-12 bg-nature-500 rounded-full" />
-                    <h2 className="text-2xl font-bold text-zinc-800">Analysis Results</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-10 mt-16">
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="flex items-center gap-4 mb-8"
+                >
+                    <div className="h-1.5 w-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-md" />
+                    <h2 className="text-3xl font-display font-black text-green-900 tracking-tight">Analysis Results</h2>
+                </motion.div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <ResultCard
-                        title="Recommended Fertilizer"
-                        value={result.explanation?.fertilizer_recommendation || result.prediction}
+                        title="Fertilizer Category"
+                        value={result.prediction}
+                        categoryName={fertDetailsOnly.categoryName}
+                        fertilizers={fertDetailsOnly.fertilizers}
                         icon={TestTube}
                         colorClass="bg-blue-600 text-blue-600"
                         gradient="from-blue-400 to-indigo-400"
@@ -76,10 +129,23 @@ export const PredictionResult = ({ result }) => {
                             <h4 className="font-bold text-blue-900 text-lg mb-2">
                                 Fertilizer Insights
                             </h4>
-                            <p className="text-blue-800/80 leading-relaxed text-lg">
-                                For your planted crop of <span className="font-bold text-blue-900 capitalize">{result.explanation?.input_data?.crop_type || 'your crop'}</span> growing in <span className="font-bold text-blue-900 capitalize">{result.explanation?.input_data?.soil_type || 'your soil'}</span>, we recommend applying <span className="font-bold text-blue-900 underline decoration-blue-300 decoration-2 underline-offset-2">{result.prediction}</span>.
-                                This recommendation is precision-tailored to your current soil nutrient metrics (N: {result.explanation?.input_data?.n ?? '—'}, P: {result.explanation?.input_data?.p ?? '—'}, K: {result.explanation?.input_data?.k ?? '—'}) and environmental conditions (Moisture: {result.explanation?.input_data?.moisture ?? '—'}%, Temp: {result.explanation?.input_data?.temperature ?? '—'}°C) to ensure optimal uptake and maximum yield potential.
-                            </p>
+                            <div className="text-blue-900/90 leading-relaxed text-xl space-y-4">
+                                <motion.p
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.4 }}
+                                >
+                                    For your planted crop of <span className="font-extrabold text-blue-950 capitalize bg-white/50 px-2 py-0.5 rounded-md">{result.explanation?.input_data?.crop_type || 'your crop'}</span> growing in <span className="font-extrabold text-blue-950 capitalize bg-white/50 px-2 py-0.5 rounded-md">{result.explanation?.input_data?.soil_type || 'your soil'}</span>, we recommend applying <span className="font-extrabold text-blue-950 underline decoration-blue-500 decoration-4 underline-offset-4">{getFertilizerDisplay(result.prediction)}</span>.
+                                </motion.p>
+                                <motion.p
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.6 }}
+                                    className="text-lg opacity-80"
+                                >
+                                    This recommendation is precision-tailored to your current soil nutrient metrics (N: {result.explanation?.input_data?.n ?? '—'}, P: {result.explanation?.input_data?.p ?? '—'}, K: {result.explanation?.input_data?.k ?? '—'}) and environmental conditions (Moisture: {result.explanation?.input_data?.moisture ?? '—'}%, Temp: {result.explanation?.input_data?.temperature ?? '—'}°C) to ensure optimal uptake and maximum yield potential.
+                                </motion.p>
+                            </div>
                         </div>
                     </div>
                 </motion.div>
@@ -88,31 +154,40 @@ export const PredictionResult = ({ result }) => {
     }
 
     return (
-        <div className="space-y-8 mt-16">
-            <div className="flex items-center gap-2 mb-6">
-                <div className="h-1 w-12 bg-nature-500 rounded-full" />
-                <h2 className="text-2xl font-bold text-zinc-800">Analysis Results</h2>
-            </div>
+        <div className="space-y-10 mt-16">
+            <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                className="flex items-center gap-4 mb-8"
+            >
+                <div className="h-1.5 w-16 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-md" />
+                <h2 className="text-3xl font-display font-black text-green-900 tracking-tight">Analysis Results</h2>
+            </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 ${result.explanation?.fertilizer_recommendation ? 'md:grid-cols-2' : ''} gap-8`}>
                 {!result.existing_crop_analysis && (
                     <ResultCard
                         title="Optimal Crop"
                         value={result.prediction}
                         icon={Sprout}
-                        colorClass="bg-nature-600 text-nature-600"
-                        gradient="from-nature-400 to-emerald-400"
+                        colorClass="bg-green-600 text-green-600"
+                        gradient="from-green-400 to-emerald-400"
                         delay={0.1}
                     />
                 )}
-                <ResultCard
-                    title="Recommended Fertilizer"
-                    value={result.explanation?.fertilizer_recommendation}
-                    icon={TestTube}
-                    colorClass="bg-blue-600 text-blue-600"
-                    gradient="from-blue-400 to-indigo-400"
-                    delay={0.2}
-                />
+                {result.explanation?.fertilizer_recommendation && (
+                    <ResultCard
+                        title="Fertilizer Category"
+                        value={result.explanation?.fertilizer_recommendation}
+                        categoryName={fertDetailsCombined.categoryName}
+                        fertilizers={fertDetailsCombined.fertilizers}
+                        icon={TestTube}
+                        colorClass="bg-blue-600 text-blue-600"
+                        gradient="from-blue-400 to-indigo-400"
+                        delay={0.2}
+                    />
+                )}
             </div>
 
             {!result.existing_crop_analysis ? (
@@ -120,12 +195,12 @@ export const PredictionResult = ({ result }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="glass-panel rounded-[2rem] p-8 md:p-10 relative overflow-hidden"
+                    className="bg-white/80 backdrop-blur-md rounded-[2rem] p-8 md:p-10 relative overflow-hidden border border-green-200 shadow-md"
                 >
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-nature-100/50 rounded-full blur-3xl -z-10 -mr-16 -mt-16" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-green-100/50 rounded-full blur-3xl -z-10 -mr-16 -mt-16" />
 
-                    <h3 className="text-xl font-bold text-zinc-800 mb-8 flex items-center gap-3">
-                        <Activity className="w-6 h-6 text-nature-600" />
+                    <h3 className="text-xl font-extrabold text-green-900 mb-8 flex items-center gap-3">
+                        <Activity className="w-6 h-6 text-green-600" />
                         Crop Probability Analysis
                     </h3>
 
@@ -133,17 +208,17 @@ export const PredictionResult = ({ result }) => {
                         {sortedProbs.map(([crop, prob], idx) => (
                             <div key={crop} className="relative group">
                                 <div className="flex justify-between items-end mb-2">
-                                    <span className="font-semibold text-zinc-700 capitalize text-lg">{crop}</span>
-                                    <span className="font-mono text-sm font-medium text-zinc-500">{(prob * 100).toFixed(1)}%</span>
+                                    <span className="font-bold text-green-800 capitalize text-lg">{crop}</span>
+                                    <span className="font-mono text-sm font-bold text-green-600">{(prob * 100).toFixed(1)}%</span>
                                 </div>
-                                <div className="h-4 w-full bg-zinc-100 rounded-full overflow-hidden shadow-inner">
+                                <div className="h-4 w-full bg-green-50 rounded-full overflow-hidden shadow-inner border border-green-100">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${prob * 100}%` }}
                                         transition={{ duration: 1.5, delay: 0.5 + (idx * 0.1), ease: "easeOut" }}
                                         className={cn(
                                             "h-full rounded-full relative overflow-hidden",
-                                            idx === 0 ? "bg-gradient-to-r from-nature-500 to-emerald-500" : "bg-zinc-300"
+                                            idx === 0 ? "bg-gradient-to-r from-green-500 to-emerald-500" : "bg-green-300"
                                         )}
                                     >
                                         {idx === 0 && (
@@ -174,15 +249,29 @@ export const PredictionResult = ({ result }) => {
                         </h4>
 
                         {result.existing_crop_analysis ? (
-                            <div className="text-blue-900/80 leading-relaxed text-base prose prose-blue max-w-none">
+                            <div className="text-blue-900/90 leading-relaxed text-xl prose prose-blue prose-lg max-w-none">
                                 <ReactMarkdown>{result.existing_crop_analysis}</ReactMarkdown>
                             </div>
                         ) : (
-                            <p className="text-blue-800/80 leading-relaxed text-lg">
-                                Based on your soil's unique profile, <span className="font-bold text-blue-900 underline decoration-blue-300 decoration-2 underline-offset-2">{result.prediction}</span> has been identified as the optimal crop choice.
-                                Our model analyzed the nutrient balance (N: {result.explanation?.input_data?.nitrogen ?? '—'}, P: {result.explanation?.input_data?.phosphorus ?? '—'}, K: {result.explanation?.input_data?.potassium ?? '—'})
-                                to ensure maximum yield potential.
-                            </p>
+                            <div className="space-y-4">
+                                <motion.p
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.7 }}
+                                    className="text-blue-900/90 leading-relaxed text-xl"
+                                >
+                                    Based on your soil's unique profile, <span className="font-extrabold text-blue-950 underline decoration-blue-500 decoration-4 bg-white/50 px-2 py-0.5 rounded-md underline-offset-4">{result.prediction}</span> has been identified as the optimal crop choice.
+                                </motion.p>
+                                <motion.p
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.8 }}
+                                    className="text-blue-800/80 leading-relaxed text-lg"
+                                >
+                                    Our model analyzed the nutrient balance (N: {result.explanation?.input_data?.nitrogen ?? '—'}, P: {result.explanation?.input_data?.phosphorus ?? '—'}, K: {result.explanation?.input_data?.potassium ?? '—'})
+                                    to ensure maximum yield potential.
+                                </motion.p>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -196,9 +285,9 @@ export const PredictionResult = ({ result }) => {
                     transition={{ delay: 0.8 }}
                     className="space-y-6"
                 >
-                    <div className="flex items-center gap-2">
-                        <div className="h-1 w-12 bg-purple-500 rounded-full" />
-                        <h2 className="text-2xl font-bold text-zinc-800">Model Insights (XAI)</h2>
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="h-1.5 w-16 bg-gradient-to-r from-purple-400 to-fuchsia-300 rounded-full shadow-lg" />
+                        <h2 className="text-3xl font-display font-black text-green-900 tracking-tight">Model Insights (XAI)</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -232,7 +321,7 @@ export const PredictionResult = ({ result }) => {
                                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                     {result.lime_examples.slice(0, 3).map((example, idx) => (
                                         <div key={idx} className="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                                            <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Logic Path #{idx + 1}</div>
+                                            <div className="text-sm font-bold text-zinc-800 uppercase tracking-wider mb-2">Logic Path #{idx + 1}</div>
                                             <div className="space-y-2">
                                                 {example.explanation.slice(0, 3).map(([condition, weight], i) => (
                                                     <div key={i} className="flex items-center justify-between text-sm">

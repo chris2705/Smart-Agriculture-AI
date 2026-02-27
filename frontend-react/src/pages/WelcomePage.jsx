@@ -2,11 +2,16 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { Sprout, CloudSun, ArrowRight, User } from 'lucide-react';
+import { Sprout, CloudSun, ArrowRight, User, LogOut } from 'lucide-react';
 
 export const WelcomePage = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
+
+    const handleSignOut = () => {
+        logout();
+        navigate('/');
+    };
 
     // Fallback name if fullName isn't populated
     const userName = user?.full_name || user?.email?.split('@')[0] || 'Farmer';
@@ -82,6 +87,22 @@ export const WelcomePage = () => {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* Sign Out */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    className="flex justify-center mt-10"
+                >
+                    <button
+                        onClick={handleSignOut}
+                        className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/70 border border-red-200 text-red-500 font-semibold shadow hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-all"
+                    >
+                        <LogOut className="w-5 h-5" />
+                        Sign Out
+                    </button>
+                </motion.div>
             </div>
         </div>
     );

@@ -3,8 +3,8 @@
 #include <ModbusMaster.h>
 
 /* ---------------- WIFI ---------------- */
-#define WIFI_SSID     "Asianet Broadband"
-#define WIFI_PASSWORD "Martin@123"
+#define WIFI_SSID     "Galaxy"
+#define WIFI_PASSWORD "Greena@123"
 
 /* ---------------- FIREBASE ---------------- */
 #define API_KEY       "AIzaSyCfYSxc-ckcIAGMR81mdz24A9MSLjrdkp4"

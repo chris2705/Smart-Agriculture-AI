@@ -89,7 +89,8 @@ export const SoilForm = ({ onSubmit, isLoading, sensorData, fieldData }) => {
         const fieldMap = ['nitrogen', 'phosphorus', 'potassium', 'pH', 'moisture', 'temperature'];
         fieldMap.forEach((field) => {
             if (data[field] != null) {
-                setValue(field, data[field], { shouldValidate: true });
+                const rounded = parseFloat(Number(data[field]).toFixed(1));
+                setValue(field, rounded, { shouldValidate: true });
             }
         });
         setSensorLoaded(true);

@@ -1,22 +1,25 @@
 # backend/src/main.py
 import os
 import joblib
-import json
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 
+from . import auth, models, database, fields
+
+# ===============================
+# ENV + GEMINI CLIENT
+# ===============================
 load_dotenv(override=True)
+
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
-
-from fastapi.middleware.cors import CORSMiddleware
-from . import auth, models, database, fields
 
 # ===============================
 # DATABASE
@@ -33,14 +36,7 @@ app.include_router(fields.router)
 # ===============================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://192.168.1.6:5173",
-        "http://192.168.1.6:5174",
-    ],
+    allow_origins=["*"],  # for development (restrict in production)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,6 +93,7 @@ def load_models():
         soil_type_le = joblib.load(os.path.join(MODEL_DIR, "label_encoder_soil_type.joblib"))
 
         return crop_model, fert_model, crop_le, fert_le, crop_type_le, soil_type_le
+
     except Exception as e:
         raise RuntimeError(f"Error loading models: {e}")
 
@@ -106,6 +103,7 @@ def startup_event():
     global CROP_MODEL, FERT_MODEL, CROP_LE, FERT_LE, CROP_TYPE_LE, SOIL_TYPE_LE
 
     print("[backend] Loading models from disk...")
+
     (
         CROP_MODEL,
         FERT_MODEL,
@@ -119,7 +117,7 @@ def startup_event():
 
 
 # ===============================
-# STATIC
+# STATIC FILES
 # ===============================
 app.mount("/explanations", StaticFiles(directory=EXPL_DIR), name="explanations")
 
@@ -128,7 +126,7 @@ app.mount("/explanations", StaticFiles(directory=EXPL_DIR), name="explanations")
 # ===============================
 
 @app.post("/predict/crop")
-async def predict_crop(data: CropFeatures):
+def predict_crop(data: CropFeatures):
     try:
         features = [
             data.n,
@@ -140,7 +138,6 @@ async def predict_crop(data: CropFeatures):
 
         pred_idx = int(CROP_MODEL.predict([features])[0])
         crop_name = str(CROP_LE.inverse_transform([pred_idx])[0])
-
         proba = CROP_MODEL.predict_proba([features])[0].tolist()
 
         return {
@@ -158,7 +155,7 @@ async def predict_crop(data: CropFeatures):
 # ===============================
 
 @app.post("/predict/fertilizer")
-async def predict_fertilizer(data: FertilizerFeatures):
+def predict_fertilizer(data: FertilizerFeatures):
     try:
         crop_enc = CROP_TYPE_LE.transform([data.crop_type])[0]
         soil_enc = SOIL_TYPE_LE.transform([data.soil_type])[0]
@@ -186,11 +183,12 @@ async def predict_fertilizer(data: FertilizerFeatures):
 
 
 # ===============================
-# 💬 CHAT (UNCHANGED)
+# 💬 CHAT (UPDATED FOR NEW SDK)
 # ===============================
 
 @app.post("/chat")
-async def chat(request: ChatRequest):
+def chat(request: ChatRequest):
+
     msg = request.message
     context = request.context or {}
 
@@ -201,7 +199,8 @@ async def chat(request: ChatRequest):
     language = context.get("language", "en-US")
     is_malayalam = language == "ml-IN"
 
-    system_instruction = f"""You are a helpful agricultural assistant.
+    system_prompt = f"""
+You are a helpful agricultural assistant.
 
 Context:
 - Predicted suitable crop: {crop}
@@ -209,22 +208,23 @@ Context:
 
 IMPORTANT:
 - If Malayalam requested, reply fully in Malayalam.
-- Keep answers concise for farmers.
+- Keep answers short and farmer-friendly.
 """
 
     try:
-        model = genai.GenerativeModel(
-            "gemini-2.5-flash",
-            system_instruction=system_instruction,
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"{system_prompt}\n\nUser: {msg}",
         )
-        response = await model.generate_content_async(msg)
+
         return {"response": response.text}
+
     except Exception as e:
         return {"response": f"AI service unavailable: {str(e)}"}
 
 
 # ===============================
-# HEALTH
+# HEALTH & SUPPORT ENDPOINTS
 # ===============================
 
 @app.get("/supported-crops")

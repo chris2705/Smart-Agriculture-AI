@@ -45,7 +45,11 @@ app.include_router(fields.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://your-frontend.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -196,34 +200,21 @@ def predict_fertilizer(data: FertilizerFeatures):
 # 💬 CHAT
 # ===============================
 @app.post("/chat")
-def chat(request: ChatRequest):
-    language = context.get("language", "en-US")
-    is_malayalam = language == "ml-IN"
-
-    system_prompt = f"""
-You are a helpful agricultural assistant.
-
-Context:
-- Predicted suitable crop: {crop}
-
-@@ -209,22 +208,23 @@ Context:
-
-IMPORTANT:
-- If Malayalam requested, reply fully in Malayalam.
-- Keep answers short and farmer-friendly.
-"""
-
+async def chat(request: ChatRequest):
     try:
+        if not GEMINI_API_KEY:
+            return {"response": "AI service unavailable."}
+
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=f"{system_prompt}\n\nUser: {msg}",
+            contents=request.message
         )
 
         return {"response": response.text}
 
     except Exception as e:
-        return {"response": f"AI service unavailable: {str(e)}"}
-
+        print("Chat error:", str(e))
+        return {"response": "AI service unavailable."}
 # ===============================
 # HEALTH
 # ===============================

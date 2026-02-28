@@ -7,6 +7,7 @@ import { PredictionResult } from '../components/PredictionResult';
 import { SensorPanel } from '../components/SensorPanel';
 import { useSensorData } from '../hooks/useSensorData';
 import { predict, recommendFertilizer } from '../api/client';
+import BACKEND_URL from '../api/client';
 import axios from 'axios';
 
 const cropBannerImages = {
@@ -58,7 +59,6 @@ export const FieldDetails = () => {
                     return;
                 }
                 try {
-                    const BACKEND_URL = `http://${window.location.hostname}:8000`;
                     const res = await axios.get(`${BACKEND_URL}/fields/`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });

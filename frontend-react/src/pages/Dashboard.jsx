@@ -5,6 +5,7 @@ import { Plus, Sprout, MapPin, Ruler, ChevronRight, LogOut, Trash2, User as User
 import { AddFieldWizard } from '../components/AddFieldWizard';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import BACKEND_URL from '../api/client';
 
 const cropImages = {
     wheat: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&q=70&auto=format&fit=crop',
@@ -37,7 +38,6 @@ export const Dashboard = () => {
     const navigate = useNavigate();
     const [fields, setFields] = useState([]);
     const [isWizardOpen, setIsWizardOpen] = useState(false);
-    const BACKEND_URL = `http://${window.location.hostname}:8000`;
 
     React.useEffect(() => {
         const fetchFields = async () => {

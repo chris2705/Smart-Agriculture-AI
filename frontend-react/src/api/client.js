@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // ─── Centralized backend URL ───────────────────────────────────────────────
-// 
-const BACKEND_URL = "https://smart-agriculture-ai-production.up.railway.app";
+// Uses Vite env variable so the app works locally (.env) and in production (Vercel).
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://smart-agriculture-ai-production.up.railway.app";
 
 // Helper: extract a useful message from Axios errors
 const handleApiError = (error) => {
@@ -88,3 +88,5 @@ export const chat = async (message, context) => {
         return { response: "Sorry, I'm having trouble connecting to the server right now." };
     }
 };
+
+export default BACKEND_URL;

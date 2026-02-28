@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { Leaf, FlaskConical, Zap, Droplets, Thermometer, Activity, Sparkles, Radio } from 'lucide-react';
+import BACKEND_URL from '../api/client';
 
 const InputField = ({ label, name, register, icon: Icon, min, max, step, defaultValue, unit, sensorValue }) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -72,7 +73,6 @@ export const SoilForm = ({ onSubmit, isLoading, sensorData, fieldData }) => {
 
     useEffect(() => {
         // Fetch fertilizer-supported crops and soil types for dropdowns
-        const BACKEND_URL = `http://${window.location.hostname}:8000`;
         fetch(`${BACKEND_URL}/supported-fert-crops`)
             .then(r => r.json())
             .then(d => setFertCrops(d.crops || []))

@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 import { Sprout, TestTube, CheckCircle2, TrendingUp, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
+import BACKEND_URL from '../api/client';
 
 const getFertilizerDetails = (category) => {
     if (!category) return { categoryName: category, fertilizers: [] };
@@ -300,7 +301,7 @@ export const PredictionResult = ({ result }) => {
                                 </h3>
                                 <div className="aspect-[4/3] bg-zinc-50 rounded-xl overflow-hidden relative">
                                     <img
-                                        src={`http://${window.location.hostname}:8000${result.shap_summary_url}`}
+                                        src={`${BACKEND_URL}${result.shap_summary_url}`}
                                         alt="SHAP Summary"
                                         className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
                                     />

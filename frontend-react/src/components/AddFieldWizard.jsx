@@ -4,6 +4,7 @@ import { X, ArrowRight, Sprout, MapPin, Ruler, Check, Loader2 } from 'lucide-rea
 import { useForm } from 'react-hook-form';
 import { cn } from '../lib/utils';
 import axios from 'axios';
+import BACKEND_URL from '../api/client';
 
 const steps = [
     { id: 'activity', title: 'Start' },
@@ -51,7 +52,6 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
 
             console.log("Sending field data:", newField);
 
-            const BACKEND_URL = `http://${window.location.hostname}:8000`;
             const res = await axios.post(`${BACKEND_URL}/fields/`, newField, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -114,7 +114,6 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
         React.useEffect(() => {
             if (formData.hasCrop) {
                 setLoadingCrops(true);
-                const BACKEND_URL = `http://${window.location.hostname}:8000`;
                 Promise.all([
                     fetch(`${BACKEND_URL}/supported-fert-crops`).then(res => res.json()),
                     fetch(`${BACKEND_URL}/supported-soil-types`).then(res => res.json())

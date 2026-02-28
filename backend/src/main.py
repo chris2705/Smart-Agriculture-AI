@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from google import genai
+import gdown
 
 from . import auth, models, database, fields
 
@@ -59,22 +60,19 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 # GOOGLE DRIVE DIRECT LINKS
 # (REPLACE WITH YOUR LINKS)
 # ===============================
-CROP_MODEL_URL = "https://drive.google.com/uc?export=download&id=1ujgYFRPIHpi1E2Zg-oePAddC7-4PYpDN"
-FERT_MODEL_URL = "https://drive.google.com/uc?export=download&id=1APYnk3VrMPwGEHz5jKftAUwJgutqhQ0J"
-CROP_LE_URL = "https://drive.google.com/uc?export=download&id=11JyTimrKC2cddYzp6FpwoQrcgcw_nS0t"
-FERT_LE_URL = "https://drive.google.com/uc?export=download&id=1OkPayypZxxDQmq1fe4c-jGX7qRUywvKA"
-CROP_TYPE_LE_URL = "https://drive.google.com/uc?export=download&id=1w_i_BnCTOO3hYaw3uC0AKjpZr4bGKrwZ"
-SOIL_TYPE_LE_URL = "https://drive.google.com/uc?export=download&id=1dKf0B9wE-KXZdzTVnNGosqptZ0e1Ly5W"
+CROP_MODEL_ID = "1ujgYFRPIHpi1E2Zg-oePAddC7-4PYpDN"
+FERT_MODEL_ID = "1APYnk3VrMPwGEHz5jKftAUwJgutqhQ0J"
+CROP_LE_ID = "11JyTimrKC2cddYzp6FpwoQrcgcw_nS0t"
+FERT_LE_ID = "1OkPayypZxxDQmq1fe4c-jGX7qRUywvKA"
+CROP_TYPE_LE_ID = "1w_i_BnCTOO3hYaw3uC0AKjpZr4bGKrwZ"
+SOIL_TYPE_LE_ID = "1dKf0B9wE-KXZdzTVnNGosqptZ0e1Ly5W"
 
 # ===============================
 # DOWNLOAD HELPER
 # ===============================
-def download_file(url, save_path):
-    print(f"Downloading {save_path} ...")
-    r = requests.get(url)
-    with open(save_path, "wb") as f:
-        f.write(r.content)
-    print(f"Downloaded {save_path}")
+def download_file_from_google_drive(file_id, destination):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    gdown.download(url, destination, quiet=False)
 
 # ===============================
 # REQUEST MODELS
@@ -121,31 +119,30 @@ def startup_event():
     print("Checking ML model files...")
 
     files = [
-        ("crop_recommendation.joblib", CROP_MODEL_URL),
-        ("fertilizer_model.joblib", FERT_MODEL_URL),
-        ("label_encoder_crop.joblib", CROP_LE_URL),
-        ("label_encoder_fert.joblib", FERT_LE_URL),
-        ("label_encoder_crop_type.joblib", CROP_TYPE_LE_URL),
-        ("label_encoder_soil_type.joblib", SOIL_TYPE_LE_URL),
+        ("crop_recommendation.joblib", CROP_MODEL_ID),
+        ("fertilizer_model.joblib", FERT_MODEL_ID),
+        ("label_encoder_crop.joblib", CROP_LE_ID),
+        ("label_encoder_fert.joblib", FERT_LE_ID),
+        ("label_encoder_crop_type.joblib", CROP_TYPE_LE_ID),
+        ("label_encoder_soil_type.joblib", SOIL_TYPE_LE_ID),
     ]
 
-    for filename, url in files:
+    for filename, file_id in files:
         file_path = os.path.join(MODEL_DIR, filename)
         if not os.path.exists(file_path):
-            download_file(url, file_path)
+            print(f"Downloading {filename}...")
+            download_file_from_google_drive(file_id, file_path)
 
     print("Loading models...")
-    (
-        CROP_MODEL,
-        FERT_MODEL,
-        CROP_LE,
-        FERT_LE,
-        CROP_TYPE_LE,
-        SOIL_TYPE_LE,
-    ) = load_models()
+
+    CROP_MODEL = joblib.load(os.path.join(MODEL_DIR, "crop_recommendation.joblib"))
+    FERT_MODEL = joblib.load(os.path.join(MODEL_DIR, "fertilizer_model.joblib"))
+    CROP_LE = joblib.load(os.path.join(MODEL_DIR, "label_encoder_crop.joblib"))
+    FERT_LE = joblib.load(os.path.join(MODEL_DIR, "label_encoder_fert.joblib"))
+    CROP_TYPE_LE = joblib.load(os.path.join(MODEL_DIR, "label_encoder_crop_type.joblib"))
+    SOIL_TYPE_LE = joblib.load(os.path.join(MODEL_DIR, "label_encoder_soil_type.joblib"))
 
     print("Models loaded successfully.")
-
 # ===============================
 # 🌱 CROP PREDICTION
 # ===============================

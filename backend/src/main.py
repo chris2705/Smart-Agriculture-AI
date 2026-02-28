@@ -1,5 +1,6 @@
 # backend/src/main.py
 
+from multiprocessing import context
 import os
 import joblib
 import numpy as np
@@ -12,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from google import genai
 import gdown
+import context
 
 from . import auth, models, database, fields
 
@@ -195,12 +197,6 @@ def predict_fertilizer(data: FertilizerFeatures):
 # ===============================
 @app.post("/chat")
 def chat(request: ChatRequest):
-
-    msg = request.message
-    context = request.context or {}
-
-
-@@ -201,7 +199,8 @@ async def chat(request: ChatRequest):
     language = context.get("language", "en-US")
     is_malayalam = language == "ml-IN"
 

@@ -1,9 +1,8 @@
 import axios from 'axios';
 
 // ─── Centralized backend URL ───────────────────────────────────────────────
-// Uses the same hostname the browser opened to reach the frontend,
-// so it works on localhost, 127.0.0.1, and any LAN IP (e.g. 192.168.1.6).
-const BACKEND_URL = `http://${window.location.hostname}:8000`;
+// 
+const BACKEND_URL = "https://smart-agriculture-ai-production.up.railway.app";
 
 // Helper: extract a useful message from Axios errors
 const handleApiError = (error) => {

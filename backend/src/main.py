@@ -150,7 +150,7 @@ def startup_event():
 # 🌱 CROP PREDICTION
 # ===============================
 @app.post("/predict/crop")
-async def predict_crop(data: CropFeatures):
+def predict_crop(data: CropFeatures):
     try:
         features = [data.n, data.p, data.k, data.temperature, data.ph]
         pred_idx = int(CROP_MODEL.predict([features])[0])
@@ -170,7 +170,7 @@ async def predict_crop(data: CropFeatures):
 # 🧪 FERTILIZER PREDICTION
 # ===============================
 @app.post("/predict/fertilizer")
-async def predict_fertilizer(data: FertilizerFeatures):
+def predict_fertilizer(data: FertilizerFeatures):
     try:
         crop_enc = CROP_TYPE_LE.transform([data.crop_type])[0]
         soil_enc = SOIL_TYPE_LE.transform([data.soil_type])[0]
@@ -197,14 +197,37 @@ async def predict_fertilizer(data: FertilizerFeatures):
 # 💬 CHAT
 # ===============================
 @app.post("/chat")
-async def chat(request: ChatRequest):
-    if not client:
-        return {"response": "AI service unavailable."}
+def chat(request: ChatRequest):
+
+    msg = request.message
+    context = request.context or {}
+
+
+@@ -201,7 +199,8 @@ async def chat(request: ChatRequest):
+    language = context.get("language", "en-US")
+    is_malayalam = language == "ml-IN"
+
+    system_prompt = f"""
+You are a helpful agricultural assistant.
+
+Context:
+- Predicted suitable crop: {crop}
+
+@@ -209,22 +208,23 @@ Context:
+
+IMPORTANT:
+- If Malayalam requested, reply fully in Malayalam.
+- Keep answers short and farmer-friendly.
+"""
 
     try:
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = await model.generate_content_async(request.message)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"{system_prompt}\n\nUser: {msg}",
+        )
+
         return {"response": response.text}
+
     except Exception as e:
         return {"response": f"AI service unavailable: {str(e)}"}
 

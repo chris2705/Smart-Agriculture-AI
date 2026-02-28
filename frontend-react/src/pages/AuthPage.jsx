@@ -30,6 +30,7 @@ export const AuthPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({ email: '', password: '', fullName: '' });
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
 
     const { login, register, user, loading } = useAuth();
     const navigate = useNavigate();
@@ -38,15 +39,52 @@ export const AuthPage = () => {
         if (!loading && user) navigate('/welcome');
     }, [user, loading, navigate]);
 
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
+
+    const getPasswordStrength = (pass) => {
+        let score = 0;
+        if (!pass) return score;
+        if (pass.length >= 8) score += 1;
+        if (/[A-Z]/.test(pass)) score += 1;
+        if (/[a-z]/.test(pass)) score += 1;
+        if (/[0-9]/.test(pass)) score += 1;
+        if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+        return Math.max(1, Math.min(score, 5));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccessMsg('');
+
+        if (!validateEmail(formData.email)) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+
+        if (!isLogin && getPasswordStrength(formData.password) < 3) {
+            setError("Password is too weak. Please use at least 8 characters, mixing uppercase, lowercase, numbers, or special characters.");
+            return;
+        }
+
         setIsLoading(true);
-        const res = isLogin
-            ? await login(formData.email, formData.password)
-            : await register(formData.fullName, formData.email, formData.password);
-        if (res.success) navigate('/welcome');
-        else setError(res.message);
+        if (isLogin) {
+            const res = await login(formData.email, formData.password);
+            if (res.success) navigate('/welcome');
+            else setError(res.message);
+        } else {
+            const res = await register(formData.fullName, formData.email, formData.password);
+            if (res.success) {
+                setSuccessMsg(res.message || "Account is created successfully! Please log in.");
+                setIsLogin(true);
+                setFormData({ ...formData, password: '' });
+            } else {
+                setError(res.message);
+            }
+        }
         setIsLoading(false);
     };
 
@@ -259,6 +297,39 @@ export const AuthPage = () => {
                                     />
                                     <Lock className="w-5 h-5 text-green-500 absolute left-3.5 top-3.5" />
                                 </div>
+
+                                <AnimatePresence>
+                                    {!isLogin && formData.password && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="pt-1 overflow-hidden"
+                                        >
+                                            <div className="flex gap-1 mb-1 mt-1">
+                                                {[1, 2, 3, 4, 5].map((level) => {
+                                                    const strength = getPasswordStrength(formData.password);
+                                                    const bgColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-400', 'bg-green-400', 'bg-green-600'];
+                                                    const bgColor = bgColors[strength - 1] || bgColors[0];
+                                                    return (
+                                                        <div
+                                                            key={level}
+                                                            className={`h-1.5 w-full rounded-full transition-all duration-300 ${level <= strength ? bgColor : 'bg-green-100'
+                                                                }`}
+                                                        />
+                                                    );
+                                                })}
+                                            </div>
+                                            <div className="flex justify-between items-center text-xs mt-1 px-1">
+                                                <span className={`${['text-red-500', 'text-orange-500', 'text-yellow-600', 'text-green-500', 'text-green-700'][getPasswordStrength(formData.password) - 1] || 'text-red-500'
+                                                    } font-bold`}>
+                                                    {['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'][getPasswordStrength(formData.password) - 1] || 'Very Weak'}
+                                                </span>
+                                                <span className="text-green-700 font-medium">Requires 3+ bars</span>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
 
                             <AnimatePresence>
@@ -271,6 +342,20 @@ export const AuthPage = () => {
                                     >
                                         <span className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />
                                         {error}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <AnimatePresence>
+                                {successMsg && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="p-3 rounded-xl text-green-700 font-semibold text-sm flex items-center gap-2 bg-green-50 border border-green-200"
+                                    >
+                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0" />
+                                        {successMsg}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -301,7 +386,7 @@ export const AuthPage = () => {
                     <p className="text-center text-green-800 font-medium text-sm">
                         {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
                         <button
-                            onClick={() => { setIsLogin(!isLogin); setError(''); }}
+                            onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); }}
                             className="text-green-600 font-extrabold hover:text-green-500 transition-colors ml-1"
                         >
                             {isLogin ? 'Sign up free →' : 'Log in'}

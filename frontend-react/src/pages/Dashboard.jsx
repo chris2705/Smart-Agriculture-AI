@@ -41,8 +41,9 @@ export const Dashboard = () => {
 
     React.useEffect(() => {
         const fetchFields = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return; // Don't fetch if not authenticated
             try {
-                const token = localStorage.getItem('token');
                 const res = await axios.get(`${BACKEND_URL}/fields/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });

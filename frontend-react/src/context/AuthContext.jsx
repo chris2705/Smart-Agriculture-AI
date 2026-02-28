@@ -51,8 +51,7 @@ export const AuthProvider = ({ children }) => {
                 password,
                 full_name: fullName
             });
-            // Auto login after register
-            return await login(email, password);
+            return { success: true, message: "Account is created successfully! Please log in." };
         } catch (error) {
             console.error("Registration failed:", error);
             const serverMsg = error.response?.data?.detail || error.response?.data || null;

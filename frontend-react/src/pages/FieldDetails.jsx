@@ -52,8 +52,12 @@ export const FieldDetails = () => {
     useEffect(() => {
         if (!fieldData && id) {
             const fetchField = async () => {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    navigate('/login');
+                    return;
+                }
                 try {
-                    const token = localStorage.getItem('token');
                     const BACKEND_URL = `http://${window.location.hostname}:8000`;
                     const res = await axios.get(`${BACKEND_URL}/fields/`, {
                         headers: { Authorization: `Bearer ${token}` }
@@ -63,7 +67,12 @@ export const FieldDetails = () => {
                     else navigate('/dashboard');
                 } catch (e) {
                     console.error("Error fetching field", e);
-                    navigate('/dashboard');
+                    if (e.response?.status === 401) {
+                        localStorage.removeItem('token');
+                        navigate('/login');
+                    } else {
+                        navigate('/dashboard');
+                    }
                 }
             };
             fetchField();

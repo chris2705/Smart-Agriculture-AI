@@ -12,6 +12,7 @@ import { WeatherPage } from './pages/WeatherPage';
 
 import { FieldDetails } from './pages/FieldDetails';
 import { FloatingChatButton } from './components/FloatingChatButton';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const HIDE_CHAT_ROUTES = ['/weather', '/welcome', '/', '/login'];
 
@@ -22,14 +23,17 @@ function AppContent() {
   return (
     <>
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<AuthPage />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/welcome" element={<WelcomePage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/field/:id" element={<FieldDetails />} />
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/weather" element={<WeatherPage />} />
         <Route path="/login" element={<AuthPage />} />
+
+        {/* Protected routes — require authentication */}
+        <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/welcome" element={<ProtectedRoute><WelcomePage /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/field/:id" element={<ProtectedRoute><FieldDetails /></ProtectedRoute>} />
+        <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+        <Route path="/weather" element={<ProtectedRoute><WeatherPage /></ProtectedRoute>} />
       </Routes>
       {showChat && <FloatingChatButton />}
     </>

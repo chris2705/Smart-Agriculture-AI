@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { cn } from '../lib/utils';
 import axios from 'axios';
 import BACKEND_URL from '../api/client';
+import { LocationPicker } from './LocationPicker';
 
 const steps = [
     { id: 'activity', title: 'Start' },
@@ -42,9 +43,18 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
                 return;
             }
 
+            // Validate that a location has been picked
+            if (!formData.location?.latitude || !formData.location?.longitude) {
+                alert("Please select a location on the map.");
+                setIsSaving(false);
+                return;
+            }
+
             const newField = {
                 name: data.name,
-                location: data.location,
+                location: formData.location.displayName || `${formData.location.latitude.toFixed(4)}, ${formData.location.longitude.toFixed(4)}`,
+                latitude: formData.location.latitude,
+                longitude: formData.location.longitude,
                 size: parseFloat(data.size),
                 crop_type: formData.hasCrop ? data.selectedCrop : "None",
                 soil_type: formData.hasCrop ? data.selectedSoilType : null
@@ -127,19 +137,29 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
             }
         }, [formData.hasCrop]);
 
+        const handleLocationChange = (locationData) => {
+            setFormData(prev => ({ ...prev, location: locationData }));
+        };
+
         return (
             <form onSubmit={handleSubmit(handleDetailsSubmit)} className="space-y-6 mt-6">
                 <div>
                     <label className="block text-sm font-semibold text-zinc-700 mb-2">Field Name</label>
                     <input {...register("name", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="e.g. North Acre" />
                 </div>
+
+                {/* Map-based Location Picker */}
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-700 mb-2">Location</label>
-                    <div className="relative">
-                        <MapPin className="absolute left-3 top-3.5 w-5 h-5 text-zinc-400" />
-                        <input {...register("location", { required: true })} className="w-full pl-10 px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="GPS or Address" />
-                    </div>
+                    <label className="block text-sm font-semibold text-zinc-700 mb-2 flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-green-600" />
+                        Farm Location
+                    </label>
+                    <LocationPicker
+                        value={formData.location}
+                        onChange={handleLocationChange}
+                    />
                 </div>
+
                 <div>
                     <label className="block text-sm font-semibold text-zinc-700 mb-2">Size (Acres)</label>
                     <div className="relative">

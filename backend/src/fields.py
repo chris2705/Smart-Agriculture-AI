@@ -10,6 +10,8 @@ router = APIRouter(prefix="/fields", tags=["fields"])
 class FieldBase(BaseModel):
     name: str
     location: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     size: float
     crop_type: Optional[str] = None
     soil_type: Optional[str] = None

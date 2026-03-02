@@ -23,6 +23,8 @@ class Field(Base):
 
     name = Column(String(255), index=True)
     location = Column(String(255))
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     size = Column(Float)
 
     crop_type = Column(String(100), nullable=True)  # crop name

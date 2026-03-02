@@ -194,6 +194,11 @@ export const FieldDetails = () => {
                             <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-white/70 shadow-sm text-green-800 border-green-200 border"
                                 style={{ backdropFilter: 'blur(8px)' }}>
                                 <MapPin className="w-3.5 h-3.5 text-green-600" /> {fieldData.location || 'Unknown'}
+                                {fieldData.latitude && fieldData.longitude && (
+                                    <span className="text-green-600 text-[10px] ml-1">
+                                        ({fieldData.latitude.toFixed(4)}°, {fieldData.longitude.toFixed(4)}°)
+                                    </span>
+                                )}
                             </span>
                             <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold bg-white/70 shadow-sm text-green-800 border-green-200 border"
                                 style={{ backdropFilter: 'blur(8px)' }}>

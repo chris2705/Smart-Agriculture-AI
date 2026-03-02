@@ -8,41 +8,25 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // On boot: validate stored token against the backend.
-    // If the token is expired or invalid, clear it so the user
-    // sees the login page instead of being bounced in a redirect loop.
+    // On boot: restore user from localStorage if both user + token are present.
+    // The stored token is considered valid until a protected API call returns 401.
+    // Each individual page (Dashboard, FieldDetails, etc.) already handles 401
+    // by clearing the token and redirecting to /login — so no separate validation
+    // call is needed here, and we avoid an extra network request that could
+    // hit CORS issues before the backend is reachable.
     useEffect(() => {
-        const validateSession = async () => {
-            const storedUser = localStorage.getItem('user');
-            const token = localStorage.getItem('token');
-
-            if (!storedUser || !token) {
-                // No stored session — go straight to login
-                setUser(null);
-                setLoading(false);
-                return;
-            }
-
+        const storedUser = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+        if (storedUser && token) {
             try {
-                // Quick validation: hit a lightweight authenticated endpoint
-                await axios.get(`${BACKEND_URL}/fields/`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                    timeout: 5000
-                });
-                // Token is still valid
                 setUser(JSON.parse(storedUser));
-            } catch (err) {
-                // Token is invalid / expired / network error on auth endpoint
-                console.warn('Stored session is invalid, clearing auth data.', err?.response?.status);
-                localStorage.removeItem('token');
+            } catch {
+                // Corrupt JSON — clear it
                 localStorage.removeItem('user');
-                setUser(null);
-            } finally {
-                setLoading(false);
+                localStorage.removeItem('token');
             }
-        };
-
-        validateSession();
+        }
+        setLoading(false);
     }, []);
 
     const login = async (email, password) => {

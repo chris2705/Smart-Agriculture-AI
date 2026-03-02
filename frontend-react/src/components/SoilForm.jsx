@@ -107,12 +107,12 @@ export const SoilForm = ({ onSubmit, isLoading, sensorData, fieldData }) => {
     }, [sensorData]);
 
     const fields = [
-        { label: 'Nitrogen', name: 'nitrogen', icon: Leaf, defaultValue: 12, min: 0, unit: 'mg/kg' },
-        { label: 'Phosphorus', name: 'phosphorus', icon: FlaskConical, defaultValue: 8, min: 0, unit: 'mg/kg' },
-        { label: 'Potassium', name: 'potassium', icon: Zap, defaultValue: 6, min: 0, unit: 'mg/kg' },
-        { label: 'pH Level', name: 'pH', icon: Activity, defaultValue: 6.0, min: 0, max: 14, step: 0.1 },
-        { label: 'Moisture', name: 'moisture', icon: Droplets, defaultValue: 3, min: 0, unit: '%' },
-        { label: 'Temperature', name: 'temperature', icon: Thermometer, defaultValue: 4, min: 0, unit: '°C' },
+        { label: 'Nitrogen', name: 'nitrogen', icon: Leaf, defaultValue: 0, min: 0, unit: 'mg/kg' },
+        { label: 'Phosphorus', name: 'phosphorus', icon: FlaskConical, defaultValue: 0, min: 0, unit: 'mg/kg' },
+        { label: 'Potassium', name: 'potassium', icon: Zap, defaultValue: 0, min: 0, unit: 'mg/kg' },
+        { label: 'pH Level', name: 'pH', icon: Activity, defaultValue: 0, min: 0, max: 14, step: 0.1 },
+        { label: 'Moisture', name: 'moisture', icon: Droplets, defaultValue: 0, min: 0, unit: '%' },
+        { label: 'Temperature', name: 'temperature', icon: Thermometer, defaultValue: 0, min: 0, unit: '°C' },
     ];
 
     return (

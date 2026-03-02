@@ -58,11 +58,9 @@ export const useSensorData = (sensorId = 'default') => {
                             moisture: data.moisture ?? null,
                             temperature: data.temperature ?? null,
                         });
-                        setLastUpdated(
-                            data.timestamp
-                                ? new Date(data.timestamp)
-                                : new Date()
-                        );
+                        // The ESP32 sends millis() as timestamp, which is time since boot, not epoch time.
+                        // Using new Date() reflects when the frontend receives the data.
+                        setLastUpdated(new Date());
                         setIsConnected(true);
                     } else {
                         // Path exists but no data yet

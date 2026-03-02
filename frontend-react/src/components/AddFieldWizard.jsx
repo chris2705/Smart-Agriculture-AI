@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, Sprout, MapPin, Ruler, Check, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -14,23 +14,25 @@ const steps = [
 
 export const AddFieldWizard = ({ onClose, onComplete }) => {
     const [currentStep, setCurrentStep] = useState(0);
-    const [formData, setFormData] = useState({});
+    const [hasCrop, setHasCrop] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Reset wizard state when component mounts
-    useEffect(() => {
-        setCurrentStep(0);
-        setFormData({});
-        setIsSaving(false);
-    }, []);
+    // Use a ref for location data so updating it does NOT trigger a re-render
+    // (which was causing the form fields to lose their values)
+    const locationRef = useRef(null);
+    const [locationDisplay, setLocationDisplay] = useState(null);
 
     const nextStep = () => setCurrentStep(prev => prev + 1);
-    const prevStep = () => setCurrentStep(prev => prev - 1);
 
-    const handleActivitySelect = (hasCrop) => {
-        setFormData({ ...formData, hasCrop });
+    const handleActivitySelect = (selected) => {
+        setHasCrop(selected);
         nextStep();
     };
+
+    const handleLocationChange = useCallback((locationData) => {
+        locationRef.current = locationData;
+        setLocationDisplay(locationData);
+    }, []);
 
     const handleDetailsSubmit = async (data) => {
         setIsSaving(true);
@@ -43,8 +45,10 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
                 return;
             }
 
+            const location = locationRef.current;
+
             // Validate that a location has been picked
-            if (!formData.location?.latitude || !formData.location?.longitude) {
+            if (!location?.latitude || !location?.longitude) {
                 alert("Please select a location on the map.");
                 setIsSaving(false);
                 return;
@@ -52,12 +56,12 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
 
             const newField = {
                 name: data.name,
-                location: formData.location.displayName || `${formData.location.latitude.toFixed(4)}, ${formData.location.longitude.toFixed(4)}`,
-                latitude: formData.location.latitude,
-                longitude: formData.location.longitude,
+                location: location.displayName || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`,
+                latitude: location.latitude,
+                longitude: location.longitude,
                 size: parseFloat(data.size),
-                crop_type: formData.hasCrop ? data.selectedCrop : "None",
-                soil_type: formData.hasCrop ? data.selectedSoilType : null
+                crop_type: hasCrop ? data.selectedCrop : "None",
+                soil_type: hasCrop ? data.selectedSoilType : null
             };
 
             console.log("Sending field data:", newField);
@@ -73,7 +77,6 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
         } catch (error) {
             console.error("Failed to save field", error);
 
-            // Check if it's an authentication error
             if (error.response?.status === 401) {
                 alert("Your session has expired. Please log in again.");
                 localStorage.removeItem('token');
@@ -115,96 +118,6 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
         </div>
     );
 
-    const DetailsStep = () => {
-        const { register, handleSubmit } = useForm({ defaultValues: formData });
-        const [supportedCrops, setSupportedCrops] = useState([]);
-        const [supportedSoilTypes, setSupportedSoilTypes] = useState([]);
-        const [loadingCrops, setLoadingCrops] = useState(false);
-
-        React.useEffect(() => {
-            if (formData.hasCrop) {
-                setLoadingCrops(true);
-                Promise.all([
-                    fetch(`${BACKEND_URL}/supported-fert-crops`).then(res => res.json()),
-                    fetch(`${BACKEND_URL}/supported-soil-types`).then(res => res.json())
-                ])
-                    .then(([fertData, soilData]) => {
-                        setSupportedCrops(fertData.crops || []);
-                        setSupportedSoilTypes(soilData.soil_types || []);
-                    })
-                    .catch(e => console.error("Failed to fetch crops/soil data", e))
-                    .finally(() => setLoadingCrops(false));
-            }
-        }, [formData.hasCrop]);
-
-        const handleLocationChange = (locationData) => {
-            setFormData(prev => ({ ...prev, location: locationData }));
-        };
-
-        return (
-            <form onSubmit={handleSubmit(handleDetailsSubmit)} className="space-y-6 mt-6">
-                <div>
-                    <label className="block text-sm font-semibold text-zinc-700 mb-2">Field Name</label>
-                    <input {...register("name", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="e.g. North Acre" />
-                </div>
-
-                {/* Map-based Location Picker */}
-                <div>
-                    <label className="block text-sm font-semibold text-zinc-700 mb-2 flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-green-600" />
-                        Farm Location
-                    </label>
-                    <LocationPicker
-                        value={formData.location}
-                        onChange={handleLocationChange}
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-semibold text-zinc-700 mb-2">Size (Acres)</label>
-                    <div className="relative">
-                        <Ruler className="absolute left-3 top-3.5 w-5 h-5 text-zinc-400" />
-                        <input type="number" step="0.1" {...register("size", { required: true })} className="w-full pl-10 px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="0.0" />
-                    </div>
-                </div>
-
-                {formData.hasCrop && (
-                    <div className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Current Crop</label>
-                            <select {...register("selectedCrop", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white text-zinc-900">
-                                <option value="">Select a crop...</option>
-                                {loadingCrops ? <option disabled>Loading...</option> : supportedCrops.map(crop => (
-                                    <option key={crop} value={crop}>{crop}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Soil Type</label>
-                            <select {...register("selectedSoilType", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white text-zinc-900">
-                                <option value="">Select a soil type...</option>
-                                {loadingCrops ? <option disabled>Loading...</option> : supportedSoilTypes.map(soil => (
-                                    <option key={soil} value={soil}>{soil}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                )}
-
-                <div className="flex justify-end pt-4">
-                    <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                        {isSaving ? 'Saving...' : 'Save Field'}
-                    </button>
-                </div>
-            </form>
-        );
-    };
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
@@ -242,11 +155,107 @@ export const AddFieldWizard = ({ onClose, onComplete }) => {
                             transition={{ duration: 0.3 }}
                         >
                             {currentStep === 0 && <ActivityStep />}
-                            {currentStep === 1 && <DetailsStep />}
+                            {currentStep === 1 && (
+                                <DetailsStepContent
+                                    hasCrop={hasCrop}
+                                    isSaving={isSaving}
+                                    locationDisplay={locationDisplay}
+                                    onLocationChange={handleLocationChange}
+                                    onSubmit={handleDetailsSubmit}
+                                />
+                            )}
                         </motion.div>
                     </AnimatePresence>
                 </div>
             </motion.div>
         </div>
+    );
+};
+
+// DetailsStep is now a SEPARATE top-level component so React doesn't
+// re-create it when the parent's state changes (fixing the lost-input bug).
+const DetailsStepContent = ({ hasCrop, isSaving, locationDisplay, onLocationChange, onSubmit }) => {
+    const { register, handleSubmit } = useForm();
+    const [supportedCrops, setSupportedCrops] = useState([]);
+    const [supportedSoilTypes, setSupportedSoilTypes] = useState([]);
+    const [loadingCrops, setLoadingCrops] = useState(false);
+
+    useEffect(() => {
+        if (hasCrop) {
+            setLoadingCrops(true);
+            Promise.all([
+                fetch(`${BACKEND_URL}/supported-fert-crops`).then(res => res.json()),
+                fetch(`${BACKEND_URL}/supported-soil-types`).then(res => res.json())
+            ])
+                .then(([fertData, soilData]) => {
+                    setSupportedCrops(fertData.crops || []);
+                    setSupportedSoilTypes(soilData.soil_types || []);
+                })
+                .catch(e => console.error("Failed to fetch crops/soil data", e))
+                .finally(() => setLoadingCrops(false));
+        }
+    }, [hasCrop]);
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-6">
+            <div>
+                <label className="block text-sm font-semibold text-zinc-700 mb-2">Field Name</label>
+                <input {...register("name", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="e.g. North Acre" />
+            </div>
+
+            {/* Map-based Location Picker */}
+            <div>
+                <label className="block text-sm font-semibold text-zinc-700 mb-2 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-green-600" />
+                    Farm Location
+                </label>
+                <LocationPicker
+                    value={locationDisplay}
+                    onChange={onLocationChange}
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-semibold text-zinc-700 mb-2">Size (Acres)</label>
+                <div className="relative">
+                    <Ruler className="absolute left-3 top-3.5 w-5 h-5 text-zinc-400" />
+                    <input type="number" step="0.1" {...register("size", { required: true })} className="w-full pl-10 px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 focus:border-transparent outline-none text-zinc-900 bg-white placeholder-zinc-400" placeholder="0.0" />
+                </div>
+            </div>
+
+            {hasCrop && (
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Current Crop</label>
+                        <select {...register("selectedCrop", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white text-zinc-900">
+                            <option value="">Select a crop...</option>
+                            {loadingCrops ? <option disabled>Loading...</option> : supportedCrops.map(crop => (
+                                <option key={crop} value={crop}>{crop}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-zinc-700 mb-2">Select Soil Type</label>
+                        <select {...register("selectedSoilType", { required: true })} className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-nature-500 outline-none bg-white text-zinc-900">
+                            <option value="">Select a soil type...</option>
+                            {loadingCrops ? <option disabled>Loading...</option> : supportedSoilTypes.map(soil => (
+                                <option key={soil} value={soil}>{soil}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex justify-end pt-4">
+                <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    {isSaving ? 'Saving...' : 'Save Field'}
+                </button>
+            </div>
+        </form>
     );
 };

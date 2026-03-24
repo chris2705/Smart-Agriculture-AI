@@ -1,6 +1,6 @@
 # backend/src/main.py
 
-from multiprocessing import context
+
 import os
 import joblib
 import numpy as np
@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from google import genai
 import gdown
-import context
+
 
 from . import auth, models, database, fields
 
@@ -40,9 +40,10 @@ models.Base.metadata.create_all(bind=database.engine)
 # ===============================
 app = FastAPI(title="Smart-Agriculture Backend API")
 
-app.include_router(auth.router)
-app.include_router(fields.router)
-
+# ===============================
+# CORS — must be added BEFORE routers so it wraps all responses
+# (including 4xx/5xx errors and OPTIONS preflight requests)
+# ===============================
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -57,6 +58,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth.router)
+app.include_router(fields.router)
 
 # ===============================
 # MODEL DIRECTORY (Railway Safe)
@@ -209,7 +213,7 @@ async def chat(request: ChatRequest):
             return {"response": "AI service unavailable."}
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash-lite",
             contents=request.message
         )
 

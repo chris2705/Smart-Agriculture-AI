@@ -79,9 +79,10 @@ export const recommendFertilizer = async (payload) => {
 };
 
 // ─── Chat ──────────────────────────────────────────────────────────────────
-export const chat = async (message, context) => {
+// history: Array of { role: 'user' | 'model', text: string }
+export const chat = async (message, context, history = []) => {
     try {
-        const response = await axios.post(`${BACKEND_URL}/chat`, { message, context });
+        const response = await axios.post(`${BACKEND_URL}/chat`, { message, context, history });
         return response.data;
     } catch (error) {
         console.error('Chat error:', error);

@@ -29,6 +29,7 @@ export const Chatbot = ({ context, fullScreen = false }) => {
     const [messages, setMessages] = useState([
         { id: 1, text: "Hello! 🌱 I'm your AI farming assistant. Get a soil analysis first, then ask me anything about your crops, fertilizers, or soil health!", sender: 'bot' }
     ]);
+    const [history, setHistory] = useState([]);  // conversation history for context memory
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
@@ -100,11 +101,22 @@ export const Chatbot = ({ context, fullScreen = false }) => {
         setInput('');
         setIsTyping(true);
 
+        // Keep last 10 pairs (20 messages) to avoid huge payloads
+        const trimmedHistory = history.slice(-20);
+
         try {
-            const response = await chat(text, { ...context, language });
-            const botMsg = { id: Date.now() + 1, text: response.response, sender: 'bot' };
+            const response = await chat(text, { ...context, language }, trimmedHistory);
+            const botText = response.response;
+            const botMsg = { id: Date.now() + 1, text: botText, sender: 'bot' };
             setMessages(prev => [...prev, botMsg]);
-            speak(response.response);
+            speak(botText);
+
+            // Update history with this exchange
+            setHistory(prev => [
+                ...prev,
+                { role: 'user', text },
+                { role: 'model', text: botText },
+            ]);
         } catch (err) {
             setMessages(prev => [...prev, { id: Date.now() + 1, text: "Sorry, I couldn't reach the server. Please try again.", sender: 'bot' }]);
         } finally {

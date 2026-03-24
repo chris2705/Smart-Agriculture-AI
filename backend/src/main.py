@@ -11,7 +11,7 @@ from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from google import genai
+import google.generativeai as genai
 import gdown
 
 
@@ -25,9 +25,22 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if GEMINI_API_KEY:
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    genai.configure(api_key=GEMINI_API_KEY)
+    CHAT_MODEL = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        system_instruction=(
+            "You are a helpful smart-farming AI assistant. "
+            "Give short, practical answers (3-5 sentences max) focused on agriculture, "
+            "crops, soil health, fertilizers, and pest control. "
+            "Avoid lengthy introductions or filler text."
+        ),
+        generation_config=genai.types.GenerationConfig(
+            max_output_tokens=350,
+            temperature=0.7,
+        ),
+    )
 else:
-    client = None
+    CHAT_MODEL = None
     print("⚠ GEMINI_API_KEY not set. Chat disabled.")
 
 # ===============================
@@ -106,9 +119,14 @@ class FertilizerFeatures(BaseModel):
     crop_type: str
     soil_type: str
 
+class ChatMessage(BaseModel):
+    role: str          # "user" or "model"
+    text: str
+
 class ChatRequest(BaseModel):
     message: str
     context: Optional[dict] = None
+    history: Optional[list[ChatMessage]] = []
 
 # ===============================
 # MODEL LOADING
@@ -209,19 +227,40 @@ def predict_fertilizer(data: FertilizerFeatures):
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
-        if not GEMINI_API_KEY:
-            return {"response": "AI service unavailable."}
+        if not CHAT_MODEL:
+            return {"response": "AI service unavailable — GEMINI_API_KEY not configured."}
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
-            contents=request.message
-        )
+        # Build a context-aware system prefix if field data is present
+        ctx = request.context or {}
+        ctx_lines = []
+        if ctx.get("prediction"):
+            ctx_lines.append(f"Recommended crop/fertilizer: {ctx['prediction']}")
+        if ctx.get("language") and ctx["language"] != "en-US":
+            ctx_lines.append(f"Reply in the user's language: {ctx['language']}")
+
+        # Convert frontend history into SDK format
+        history = []
+        for msg in (request.history or []):
+            history.append({
+                "role": msg.role,
+                "parts": [msg.text],
+            })
+
+        # Prepend context note as first user turn (only if no prior history)
+        if ctx_lines and not history:
+            history = [
+                {"role": "user", "parts": ["Context: " + "; ".join(ctx_lines)]},
+                {"role": "model", "parts": ["Understood! I'll keep that context in mind."]},
+            ]
+
+        chat_session = CHAT_MODEL.start_chat(history=history)
+        response = chat_session.send_message(request.message)
 
         return {"response": response.text}
 
     except Exception as e:
         print("Chat error:", str(e))
-        return {"response": "AI service unavailable."}
+        return {"response": f"AI service temporarily unavailable. Please try again shortly."}
 # ===============================
 # HEALTH
 # ===============================

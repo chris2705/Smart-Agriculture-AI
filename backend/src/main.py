@@ -25,8 +25,15 @@ _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(_BASE, ".env"))
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+# Fallback chain — tried in order if a model is rate-limited (429)
+OPENROUTER_MODELS = [
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "deepseek/deepseek-chat:free",
+    "mistralai/mistral-7b-instruct:free",
+    "google/gemma-3-12b-it:free",
+]
 
 SYSTEM_PROMPT = (
     "You are a helpful smart-farming AI assistant. "

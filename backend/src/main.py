@@ -250,8 +250,7 @@ async def chat(request: ChatRequest):
         messages.append({"role": role, "content": msg.text})
     messages.append({"role": "user", "content": request.message})
 
-    payload = {
-        "model": OPENROUTER_MODEL,
+    payload_base = {
         "messages": messages,
         "max_tokens": 350,
         "temperature": 0.7,
@@ -261,35 +260,35 @@ async def chat(request: ChatRequest):
         "Content-Type": "application/json",
     }
 
-    # Retry up to 3 times with exponential backoff on 429
-    max_retries = 3
-    for attempt in range(max_retries):
+    # Try each model in the fallback chain until one succeeds
+    for model in OPENROUTER_MODELS:
         try:
+            print(f"Trying model: {model}")
             resp = requests.post(
                 OPENROUTER_URL,
                 headers=headers,
-                json=payload,
+                json={**payload_base, "model": model},
                 timeout=30,
             )
             if resp.status_code == 429:
-                wait = 2 ** attempt          # 1s, 2s, 4s
-                print(f"Rate limited (429). Retrying in {wait}s (attempt {attempt+1}/{max_retries})")
-                time.sleep(wait)
-                continue
+                print(f"  → Rate limited on {model}, trying next...")
+                continue                          # move to next model immediately
             resp.raise_for_status()
             data = resp.json()
             reply = data["choices"][0]["message"]["content"]
+            print(f"  → Success with {model}")
             return {"response": reply}
 
         except requests.exceptions.HTTPError as e:
-            if resp.status_code == 429 and attempt == max_retries - 1:
-                return {"response": "The AI is a bit busy right now (rate limit). Please wait a few seconds and try again."}
-            print(f"HTTP error on attempt {attempt+1}:", str(e))
+            print(f"  → HTTP error with {model}: {e}")
+            continue
         except Exception as e:
-            print(f"Chat error on attempt {attempt+1}:", str(e))
+            print(f"  → Unexpected error with {model}: {e}")
             return {"response": f"AI error: {str(e)}"}
 
-    return {"response": "The AI is a bit busy right now. Please wait a moment and try again."}
+    # All models exhausted
+    return {"response": "All AI models are currently busy. Please try again in a minute."}
+
 # ===============================
 # HEALTH
 # ===============================

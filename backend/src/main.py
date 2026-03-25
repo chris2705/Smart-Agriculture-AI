@@ -11,7 +11,6 @@ from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import google.generativeai as genai
 import gdown
 
 
@@ -22,26 +21,19 @@ from . import auth, models, database, fields
 # ===============================
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    CHAT_MODEL = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=(
-            "You are a helpful smart-farming AI assistant. "
-            "Give short, practical answers (3-5 sentences max) focused on agriculture, "
-            "crops, soil health, fertilizers, and pest control. "
-            "Avoid lengthy introductions or filler text."
-        ),
-        generation_config=genai.types.GenerationConfig(
-            max_output_tokens=350,
-            temperature=0.7,
-        ),
-    )
-else:
-    CHAT_MODEL = None
-    print("⚠ GEMINI_API_KEY not set. Chat disabled.")
+SYSTEM_PROMPT = (
+    "You are a helpful smart-farming AI assistant. "
+    "Give short, practical answers (3-5 sentences max) focused on agriculture, "
+    "crops, soil health, fertilizers, and pest control. "
+    "Avoid lengthy introductions or filler text."
+)
+
+if not OPENROUTER_API_KEY:
+    print("⚠ OPENROUTER_API_KEY not set. Chat disabled.")
 
 # ===============================
 # DATABASE
@@ -227,10 +219,10 @@ def predict_fertilizer(data: FertilizerFeatures):
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
-        if not CHAT_MODEL:
-            return {"response": "AI service unavailable — GEMINI_API_KEY not configured."}
+        if not OPENROUTER_API_KEY:
+            return {"response": "AI service unavailable — OPENROUTER_API_KEY not configured."}
 
-        # Build a context-aware system prefix if field data is present
+        # Build a context-aware system prompt
         ctx = request.context or {}
         ctx_lines = []
         if ctx.get("prediction"):
@@ -238,29 +230,44 @@ async def chat(request: ChatRequest):
         if ctx.get("language") and ctx["language"] != "en-US":
             ctx_lines.append(f"Reply in the user's language: {ctx['language']}")
 
-        # Convert frontend history into SDK format
-        history = []
+        system_content = SYSTEM_PROMPT
+        if ctx_lines:
+            system_content += " Context: " + "; ".join(ctx_lines) + "."
+
+        # Build the messages array (OpenAI-compatible format)
+        messages = [{"role": "system", "content": system_content}]
+
+        # Append conversation history
         for msg in (request.history or []):
-            history.append({
-                "role": msg.role,
-                "parts": [msg.text],
-            })
+            # Gemini used "model"; OpenAI uses "assistant"
+            role = "assistant" if msg.role == "model" else msg.role
+            messages.append({"role": role, "content": msg.text})
 
-        # Prepend context note as first user turn (only if no prior history)
-        if ctx_lines and not history:
-            history = [
-                {"role": "user", "parts": ["Context: " + "; ".join(ctx_lines)]},
-                {"role": "model", "parts": ["Understood! I'll keep that context in mind."]},
-            ]
+        # Append the new user message
+        messages.append({"role": "user", "content": request.message})
 
-        chat_session = CHAT_MODEL.start_chat(history=history)
-        response = chat_session.send_message(request.message)
-
-        return {"response": response.text}
+        resp = requests.post(
+            OPENROUTER_URL,
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": OPENROUTER_MODEL,
+                "messages": messages,
+                "max_tokens": 350,
+                "temperature": 0.7,
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        reply = data["choices"][0]["message"]["content"]
+        return {"response": reply}
 
     except Exception as e:
         print("Chat error:", str(e))
-        return {"response": f"AI service temporarily unavailable. Please try again shortly."}
+        return {"response": "AI service temporarily unavailable. Please try again shortly."}
 # ===============================
 # HEALTH
 # ===============================

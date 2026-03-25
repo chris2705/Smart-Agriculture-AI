@@ -5,6 +5,7 @@ import os
 import joblib
 import numpy as np
 import requests
+import time
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -220,56 +221,68 @@ def predict_fertilizer(data: FertilizerFeatures):
 # ===============================
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    try:
-        if not OPENROUTER_API_KEY:
-            return {"response": "AI service unavailable — OPENROUTER_API_KEY not configured."}
+    if not OPENROUTER_API_KEY:
+        return {"response": "AI service unavailable — OPENROUTER_API_KEY not configured."}
 
-        # Build a context-aware system prompt
-        ctx = request.context or {}
-        ctx_lines = []
-        if ctx.get("prediction"):
-            ctx_lines.append(f"Recommended crop/fertilizer: {ctx['prediction']}")
-        if ctx.get("language") and ctx["language"] != "en-US":
-            ctx_lines.append(f"Reply in the user's language: {ctx['language']}")
+    # Build a context-aware system prompt
+    ctx = request.context or {}
+    ctx_lines = []
+    if ctx.get("prediction"):
+        ctx_lines.append(f"Recommended crop/fertilizer: {ctx['prediction']}")
+    if ctx.get("language") and ctx["language"] != "en-US":
+        ctx_lines.append(f"Reply in the user's language: {ctx['language']}")
 
-        system_content = SYSTEM_PROMPT
-        if ctx_lines:
-            system_content += " Context: " + "; ".join(ctx_lines) + "."
+    system_content = SYSTEM_PROMPT
+    if ctx_lines:
+        system_content += " Context: " + "; ".join(ctx_lines) + "."
 
-        # Build the messages array (OpenAI-compatible format)
-        messages = [{"role": "system", "content": system_content}]
+    # Build the messages array (OpenAI-compatible format)
+    messages = [{"role": "system", "content": system_content}]
+    for msg in (request.history or []):
+        role = "assistant" if msg.role == "model" else msg.role
+        messages.append({"role": role, "content": msg.text})
+    messages.append({"role": "user", "content": request.message})
 
-        # Append conversation history
-        for msg in (request.history or []):
-            # Gemini used "model"; OpenAI uses "assistant"
-            role = "assistant" if msg.role == "model" else msg.role
-            messages.append({"role": role, "content": msg.text})
+    payload = {
+        "model": OPENROUTER_MODEL,
+        "messages": messages,
+        "max_tokens": 350,
+        "temperature": 0.7,
+    }
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+    }
 
-        # Append the new user message
-        messages.append({"role": "user", "content": request.message})
+    # Retry up to 3 times with exponential backoff on 429
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(
+                OPENROUTER_URL,
+                headers=headers,
+                json=payload,
+                timeout=30,
+            )
+            if resp.status_code == 429:
+                wait = 2 ** attempt          # 1s, 2s, 4s
+                print(f"Rate limited (429). Retrying in {wait}s (attempt {attempt+1}/{max_retries})")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+            reply = data["choices"][0]["message"]["content"]
+            return {"response": reply}
 
-        resp = requests.post(
-            OPENROUTER_URL,
-            headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": OPENROUTER_MODEL,
-                "messages": messages,
-                "max_tokens": 350,
-                "temperature": 0.7,
-            },
-            timeout=30,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        reply = data["choices"][0]["message"]["content"]
-        return {"response": reply}
+        except requests.exceptions.HTTPError as e:
+            if resp.status_code == 429 and attempt == max_retries - 1:
+                return {"response": "The AI is a bit busy right now (rate limit). Please wait a few seconds and try again."}
+            print(f"HTTP error on attempt {attempt+1}:", str(e))
+        except Exception as e:
+            print(f"Chat error on attempt {attempt+1}:", str(e))
+            return {"response": f"AI error: {str(e)}"}
 
-    except Exception as e:
-        print("Chat error:", str(e))
-        return {"response": f"AI error: {str(e)}"}
+    return {"response": "The AI is a bit busy right now. Please wait a moment and try again."}
 # ===============================
 # HEALTH
 # ===============================

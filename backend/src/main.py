@@ -19,7 +19,9 @@ from . import auth, models, database, fields
 # ===============================
 # ENVIRONMENT
 # ===============================
-load_dotenv()
+# Resolve .env relative to the backend root (two levels up from this file)
+_BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(_BASE, ".env"))
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
@@ -267,7 +269,7 @@ async def chat(request: ChatRequest):
 
     except Exception as e:
         print("Chat error:", str(e))
-        return {"response": "AI service temporarily unavailable. Please try again shortly."}
+        return {"response": f"AI error: {str(e)}"}
 # ===============================
 # HEALTH
 # ===============================

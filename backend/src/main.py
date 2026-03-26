@@ -4,8 +4,8 @@
 import os
 import joblib
 import numpy as np
-import requests
 import time
+import google.generativeai as genai
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -24,16 +24,7 @@ from . import auth, models, database, fields
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(_BASE, ".env"))
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-
-# Fallback chain — tried in order if a model is rate-limited (429)
-OPENROUTER_MODELS = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "deepseek/deepseek-chat:free",
-    "mistralai/mistral-7b-instruct:free",
-    "google/gemma-3-12b-it:free",
-]
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 SYSTEM_PROMPT = (
     "You are a helpful smart-farming AI assistant. "
@@ -42,8 +33,10 @@ SYSTEM_PROMPT = (
     "Avoid lengthy introductions or filler text."
 )
 
-if not OPENROUTER_API_KEY:
-    print("⚠ OPENROUTER_API_KEY not set. Chat disabled.")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+else:
+    print("⚠ GEMINI_API_KEY not set. Chat disabled.")
 
 # ===============================
 # DATABASE

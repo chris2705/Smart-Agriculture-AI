@@ -228,8 +228,8 @@ def predict_fertilizer(data: FertilizerFeatures):
 # ===============================
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    if not OPENROUTER_API_KEY:
-        return {"response": "AI service unavailable — OPENROUTER_API_KEY not configured."}
+    if not GEMINI_API_KEY:
+        return {"response": "AI service unavailable — GEMINI_API_KEY not configured."}
 
     # Build a context-aware system prompt
     ctx = request.context or {}
@@ -243,51 +243,35 @@ async def chat(request: ChatRequest):
     if ctx_lines:
         system_content += " Context: " + "; ".join(ctx_lines) + "."
 
-    # Build the messages array (OpenAI-compatible format)
-    messages = [{"role": "system", "content": system_content}]
-    for msg in (request.history or []):
-        role = "assistant" if msg.role == "model" else msg.role
-        messages.append({"role": role, "content": msg.text})
-    messages.append({"role": "user", "content": request.message})
+    # We use gemini-1.5-flash for the fastest response
+    try:
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=system_content
+        )
 
-    payload_base = {
-        "messages": messages,
-        "max_tokens": 350,
-        "temperature": 0.7,
-    }
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json",
-    }
+        history = []
+        for msg in (request.history or []):
+            role = "model" if msg.role == "model" else "user"
+            history.append({"role": role, "parts": [msg.text]})
 
-    # Try each model in the fallback chain until one succeeds
-    for model in OPENROUTER_MODELS:
-        try:
-            print(f"Trying model: {model}")
-            resp = requests.post(
-                OPENROUTER_URL,
-                headers=headers,
-                json={**payload_base, "model": model},
-                timeout=30,
-            )
-            if resp.status_code == 429:
-                print(f"  → Rate limited on {model}, trying next...")
-                continue                          # move to next model immediately
-            resp.raise_for_status()
-            data = resp.json()
-            reply = data["choices"][0]["message"]["content"]
-            print(f"  → Success with {model}")
-            return {"response": reply}
+        chat_session = model.start_chat(history=history)
+        
+        # Adding generation config for speed/optimization
+        gen_config = genai.types.GenerationConfig(
+            max_output_tokens=350,
+            temperature=0.7,
+        )
 
-        except requests.exceptions.HTTPError as e:
-            print(f"  → HTTP error with {model}: {e}")
-            continue
-        except Exception as e:
-            print(f"  → Unexpected error with {model}: {e}")
-            return {"response": f"AI error: {str(e)}"}
+        response = chat_session.send_message(
+            request.message,
+            generation_config=gen_config
+        )
+        return {"response": response.text}
 
-    # All models exhausted
-    return {"response": "All AI models are currently busy. Please try again in a minute."}
+    except Exception as e:
+        print(f"  → Unexpected error with Gemini: {e}")
+        return {"response": f"AI error: {str(e)}"}
 
 # ===============================
 # HEALTH
